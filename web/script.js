@@ -51,7 +51,7 @@
     let H = null;
     if((originalPos == null || targetPos == null)) {
       if(!!elements_list[idx]) {
-        H = elements_list[idx];
+        // H = elements_list[idx];
       }
     } else {
       var from, i, j, p, to;
@@ -151,7 +151,7 @@
         return results;
       })();
 
-      applyTransform(element, null, null, i, false, callback);
+      // applyTransform(element, null, null, i, false, callback);
       
       // Transform `element` to match the new positions of the dots whenever dragged
       $(controlPoints).draggable({
