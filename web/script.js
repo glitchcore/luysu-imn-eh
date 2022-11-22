@@ -126,10 +126,13 @@
             // Record the original positions of the dots
             let originalPos = controlPoints.map(p => [p.offset().left, p.offset().top]);
 
-            applyTransform(element, originalPos, elements_list[idx], idx, false, callback);
-            /*elements_list[i].forEach((point, i) => {
-
-            })*/
+            if(!!elements_list[idx]) {
+                applyTransform(element, originalPos, elements_list[idx], idx, false, callback);
+                elements_list[idx].forEach((point, i) => {
+                    console.log(point);
+                    controlPoints[i].offset({top: point[1], left: point[0]});
+                });
+            }
             
             // Transform `element` to match the new positions of the dots whenever dragged
             $(controlPoints).draggable({
@@ -148,7 +151,8 @@
                         element,
                         originalPos, controlPoints.map(p => [p.offset().left, p.offset().top]),
                         idx, true, callback
-                    )
+                    );
+
                     return $(element).css('pointer-events', 'auto');
                 }
             });
