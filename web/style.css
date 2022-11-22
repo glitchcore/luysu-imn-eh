@@ -3,6 +3,10 @@
   padding: 10px;*/
   /*height: 150px;
   width: 500px;*/
-  display: inline-block;
+  display: block;
+  position: absolute;
   border: 1px solid black;
+}
+.common img {
+  z-index: -99;
 }
