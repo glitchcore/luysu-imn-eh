@@ -15,7 +15,7 @@
         return "[]";
     }
 
-    let elements_list = JSON.parse(getCookie("H"));
+    let elements_list = JSON.parse(getCookie("targets"));
 
     let $ = jQuery;
 
@@ -46,65 +46,69 @@
     };
 
     function applyTransform(element, originalPos, targetPos, idx, is_stop, callback) {
-        let H = null;
-        if((originalPos == null || targetPos == null)) {
+        if(targetPos == null) {
             if(!!elements_list[idx]) {
-                // H = elements_list[idx];
+                targetPos = elements_list[idx];
+            } else {
+                targetPos = originalPos;
             }
-        } else {
-            var from, i, j, p, to;
-            // All offsets were calculated relative to the document
-            // Make them relative to (0, 0) of the element instead
-            from = (function() {
-                var k, len, results;
-                results = [];
-                for (k = 0, len = originalPos.length; k < len; k++) {
-                    p = originalPos[k];
-                    results.push({
-                        x: p[0] - originalPos[0][0],
-                        y: p[1] - originalPos[0][1]
-                    });
-                }
-                return results;
-            })();
-            to = (function() {
-                var k, len, results;
-                results = [];
-                for (k = 0, len = targetPos.length; k < len; k++) {
-                    p = targetPos[k];
-                    results.push({
-                        x: p[0] - originalPos[0][0],
-                        y: p[1] - originalPos[0][1]
-                    });
-                }
-                return results;
-            })();
-            // Solve for the transform
-            H = getTransform(from, to);
         }
+
+        var from, i, j, p, to;
+        // All offsets were calculated relative to the document
+        // Make them relative to (0, 0) of the element instead
+        from = (function() {
+            var k, len, results;
+            results = [];
+            for (k = 0, len = originalPos.length; k < len; k++) {
+                p = originalPos[k];
+                results.push({
+                    x: p[0] - originalPos[0][0],
+                    y: p[1] - originalPos[0][1]
+                });
+            }
+            return results;
+        })();
+        to = (function() {
+            var k, len, results;
+            results = [];
+            for (k = 0, len = targetPos.length; k < len; k++) {
+                p = targetPos[k];
+                results.push({
+                    x: p[0] - originalPos[0][0],
+                    y: p[1] - originalPos[0][1]
+                });
+            }
+            return results;
+        })();
+        // Solve for the transform
+        let H = getTransform(from, to);
         
         // Apply the matrix3d as H transposed because matrix3d is column major order
         // Also need use toFixed because css doesn't allow scientific notation
-        if(H != null) {
-            $(element).css({
-                'transform': `matrix3d(${((function() {
-                    var k, results;
-                    results = [];
-                    for (i = k = 0; k < 4; i = ++k) {
-                        results.push((function() {
-                            var l, results1;
-                            results1 = [];
-                            for (j = l = 0; l < 4; j = ++l) {
-                                results1.push(H[j][i].toFixed(20));
-                            }
-                            return results1;
-                        })());
-                    }
-                    return results;
-                })()).join(',')})`,
-                'transform-origin': '0 0'
-            });
-            return typeof callback === "function" ? callback(idx, H, is_stop) : void 0;
+        $(element).css({
+            'transform': `matrix3d(${((function() {
+                var k, results;
+                results = [];
+                for (i = k = 0; k < 4; i = ++k) {
+                    results.push((function() {
+                        var l, results1;
+                        results1 = [];
+                        for (j = l = 0; l < 4; j = ++l) {
+                            results1.push(H[j][i].toFixed(20));
+                        }
+                        return results1;
+                    })());
+                }
+                return results;
+            })()).join(',')})`,
+            'transform-origin': '0 0'
+        });
+
+        elements_list[idx] = targetPos;
+
+        if(typeof callback === "function" && is_stop) {
+            callback();
         }
     };
 
@@ -112,8 +116,6 @@
         let res = [];
 
         $(selector).each(function(i, element) {
-            console.log(i);
-
             var controlPoints, originalPos, p, position;
             $(element).css('transform', '');
             
@@ -149,7 +151,7 @@
                 return results;
             })();
 
-            // applyTransform(element, null, null, i, false, callback);
+            applyTransform(element, originalPos, null, i, false, callback);
             
             // Transform `element` to match the new positions of the dots whenever dragged
             $(controlPoints).draggable({
@@ -187,30 +189,9 @@
         return res;
     };
 
-    makeTransformable('.box', function(i, H, is_stop) {
-        elements_list[i] = H;
-
-        if(is_stop) {
-            console.log(elements_list);
-            document.cookie = "H=" + JSON.stringify(elements_list) + "; path=/";
-        }
-        /*var i, j;
-        console.log($(element).css('transform'));
-        return $(element).html($('<table>').append($('<tr>').html($('<td>').text('matrix3d('))).append((function() {
-            var k, results;
-            results = [];
-            for (i = k = 0; k < 4; i = ++k) {
-                results.push($('<tr>').append((function() {
-                    var l, results1;
-                    results1 = [];
-                    for (j = l = 0; l < 4; j = ++l) {
-                        results1.push($('<td>').text(H[j][i] + ((i === j && j === 3) ? '' : ',')));
-                    }
-                    return results1;
-                })()));
-            }
-            return results;
-        })()).append($('<tr>').html($('<td>').text(')'))));*/
+    makeTransformable('.box', function() {
+        console.log(elements_list);
+        document.cookie = "targets=" + JSON.stringify(elements_list) + "; path=/";
     });
 
 }).call(this);
