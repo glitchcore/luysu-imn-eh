@@ -46,14 +46,6 @@
     };
 
     function applyTransform(element, originalPos, targetPos, idx, is_stop, callback) {
-        if(targetPos == null) {
-            if(!!elements_list[idx]) {
-                targetPos = elements_list[idx];
-            } else {
-                targetPos = originalPos;
-            }
-        }
-
         var from, i, j, p, to;
         // All offsets were calculated relative to the document
         // Make them relative to (0, 0) of the element instead
@@ -113,45 +105,31 @@
     };
 
     function makeTransformable(selector, callback) {
-        let res = [];
-
-        $(selector).each(function(i, element) {
-            var controlPoints, originalPos, p, position;
+        $(selector).each((idx, element) => {
             $(element).css('transform', '');
             
             // Add four dots to corners of `element` as control points
-            controlPoints = (function() {
-                var k, len, ref, results;
-                ref = ['left top', 'left bottom', 'right top', 'right bottom'];
-                results = [];
-                for (k = 0, len = ref.length; k < len; k++) {
-                    position = ref[k];
-                    results.push($('<div>').css({
-                        border: '10px solid black',
-                        borderRadius: '10px',
-                        cursor: 'move',
-                        position: 'absolute',
-                        zIndex: 100000
-                    }).appendTo('body').position({
-                        at: position,
-                        of: element,
-                        collision: 'none'
-                    }));
-                }
-                return results;
-            })();
+            const ref = ['left top', 'left bottom', 'right top', 'right bottom'];
+            let controlPoints = ref.map(position => $('<div>').css({
+                    border: '10px solid black',
+                    borderRadius: '10px',
+                    cursor: 'move',
+                    position: 'absolute',
+                    zIndex: 100000
+                }).appendTo('body').position({
+                    at: position,
+                    of: element,
+                    collision: 'none'
+                })
+            );
+            
             // Record the original positions of the dots
-            originalPos = (function() {
-                var k, len, results;
-                results = [];
-                for (k = 0, len = controlPoints.length; k < len; k++) {
-                    p = controlPoints[k];
-                    results.push([p.offset().left, p.offset().top]);
-                }
-                return results;
-            })();
+            let originalPos = controlPoints.map(p => [p.offset().left, p.offset().top]);
 
-            applyTransform(element, originalPos, null, i, false, callback);
+            applyTransform(element, originalPos, elements_list[idx], idx, false, callback);
+            /*elements_list[i].forEach((point, i) => {
+
+            })*/
             
             // Transform `element` to match the new positions of the dots whenever dragged
             $(controlPoints).draggable({
@@ -159,34 +137,22 @@
                     return $(element).css('pointer-events', 'none'); // makes dragging around iframes easier 
                 },
                 drag: () => {
-                    return applyTransform(element, originalPos, (function() {
-                        var k, len, results;
-                        results = [];
-                        for (k = 0, len = controlPoints.length; k < len; k++) {
-                            p = controlPoints[k];
-                            results.push([p.offset().left, p.offset().top]);
-                        }
-                        return results;
-                    })(), i, false, callback);
+                    return applyTransform(
+                        element,
+                        originalPos, controlPoints.map(p => [p.offset().left, p.offset().top]),
+                        idx, false, callback
+                    );
                 },
                 stop: () => {
-                    applyTransform(element, originalPos, (function() {
-                        var k, len, results;
-                        results = [];
-                        for (k = 0, len = controlPoints.length; k < len; k++) {
-                            p = controlPoints[k];
-                            results.push([p.offset().left, p.offset().top]);
-                        }
-                        return results;
-                    })(), i, true, callback);
+                    applyTransform(
+                        element,
+                        originalPos, controlPoints.map(p => [p.offset().left, p.offset().top]),
+                        idx, true, callback
+                    )
                     return $(element).css('pointer-events', 'auto');
                 }
             });
-
-            res.push(null);
         });
-
-        return res;
     };
 
     makeTransformable('.box', function() {
