@@ -15,7 +15,9 @@
         return "[]";
     }
 
-    let elements_list = JSON.parse(getCookie("targets"));
+    // let elements_list = JSON.parse(getCookie("targets"));
+    let searchParams = new URLSearchParams(window.location.search);
+    let elements_list = JSON.parse(searchParams.get("targets") || "[]");
 
     let $ = jQuery;
 
@@ -111,8 +113,8 @@
             // Add four dots to corners of `element` as control points
             const ref = ['left top', 'left bottom', 'right top', 'right bottom'];
             let controlPoints = ref.map(position => $('<div>').css({
-                    border: '10px solid black',
-                    borderRadius: '10px',
+                    border: '3px solid black',
+                    borderRadius: '3px',
                     cursor: 'move',
                     position: 'absolute',
                     zIndex: 100000
@@ -161,7 +163,11 @@
 
     makeTransformable('.box', function() {
         console.log(elements_list);
-        document.cookie = "targets=" + JSON.stringify(elements_list) + "; path=/";
+        // document.cookie = "targets=" + JSON.stringify(elements_list) + "; path=/";
+        let searchParams = new URLSearchParams();
+        searchParams.set("targets", JSON.stringify(elements_list));
+        let newUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?${searchParams.toString()}`;
+        window.history.pushState({ path: newUrl }, '', newUrl);
     });
 
 }).call(this);
