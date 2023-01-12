@@ -1,0 +1,20 @@
+BR = 63, 36
+BL = 37, 68
+TL = -59, -12
+TR = -15, -65
+
+X63Y36
+X37Y68
+X-59Y-12
+X-15Y-65
+X63Y36
+X0Y0
+
+
+X: 50 steps = 127
+Y: 50 steps = 121
+
+
+workspace: 195, 255
+
+between centers = 375
