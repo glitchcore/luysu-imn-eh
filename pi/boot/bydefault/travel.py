@@ -275,3 +275,8 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# grbl.stream("$120=50.000")
+# grbl.stream("$121=50.000")
+# grbl.stream("$110=2000.000")
+# grbl.stream("$111=2000.000")
