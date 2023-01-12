@@ -87,42 +87,56 @@ class Device:
         print(">^X")
         self.ser.write(b'\x18')
 
-def limiter_cycle(device, command):
+def limiter_cycle(d, command):
     try:
         d.command(command)
         while True:
-            status, mpos = device.get_status()
+            status, mpos = d.get_status()
             print("status:", status)
             print(f"X:{mpos[0]} Y:{mpos[1]}")
             if status != "Run":
                 break
             time.sleep(0.5)
     except Device.DeviceNeedResetError:
-        device.reset()
-
-    status, mpos = device.get_status()
-    print("status:", status)
-    print(f"X:{mpos[0]} Y:{mpos[1]}")
-
-    if status == "Alarm":
-        device.command("$X")
+        d.reset()
 
 def home_a(d):
     def homing_cycle(speed):
+        d.command("$21=1")
         limiter_cycle(d, f"G1F{speed}X-2000")
-        d.home = (d.mpos[0], d.home[1])
-        retract = d.home[0] + 2
+
+        status, mpos = d.get_status()
+        print("status:", status)
+        print(f"X:{mpos[0]} Y:{mpos[1]}")
+
+        d.command("$21=0")
+
+        if status == "Alarm":
+            d.command("$X")
+
+        d.home = d.mpos
+        retract = d.home[0] + 4
         while True:
-            limiter_cycle(d, f"G1F{speed}X{retract}")
+            limiter_cycle(d, f"G1F1000X{retract}")
 
             if(abs(d.mpos[0] - retract) < 0.01):
                 break
-    # B homing
-    d.command("M08")
-    d.command("M05")
+        d.command("$21=1")
+
+    # A homing
+    while True:
+        try:
+            d.command("M08")
+            d.command("M05")
+            break
+        except Device.DeviceNeedResetError:
+            d.reset()
+            status, mpos = d.get_status()
+            if status == "Alarm":
+                d.command("$X")
 
     # fast homing
-    homing_cycle(500)
+    homing_cycle(1000)
     homing_cycle(50)
 
 W = 420
@@ -130,23 +144,53 @@ def home_b(d):
     target = (d.home[0] + W, d.home[1] - W)
 
     def homing_cycle(speed):
+        d.command("$21=1")
         limiter_cycle(d, f"G1F{speed}X{target[0]}Y{target[1]}")
+
+        status, mpos = d.get_status()
+        print("status:", status)
+        print(f"X:{mpos[0]} Y:{mpos[1]}")
+
+        d.command("$21=0")
+
+        if status == "Alarm":
+            d.command("$X")
+
         d.home = (d.home[0], d.mpos[1])
-        retract = d.home[1] + 2
+        retract = d.home[1] + 4
         while True:
-            limiter_cycle(d, f"G1F{speed}Y{retract}")
+            limiter_cycle(d, f"G1F1000Y{retract}")
 
             if(abs(d.mpos[1] - retract) < 0.01):
                 break
-    # A homing
-    d.command("M09")
-    d.command("M05")
+
+        d.command("$21=1")
+
+
+    # B homing
+    while True:
+        try:
+            d.command("M09")
+            d.command("M05")
+            break
+        except Device.DeviceNeedResetError:
+            d.reset()
+            status, mpos = d.get_status()
+            if status == "Alarm":
+                d.command("$X")
+
 
     # fast homing
-    homing_cycle(500)
+    homing_cycle(1000)
     homing_cycle(50)
 
-def arrow_move():
+def arrow_move(d):
+    ARROW_STEP = 2
+
+    prefix = input("Please input the prefix of the file name: ")
+    N = 0
+    points = []
+
     while True:
         esc = ord(getch())
         if esc == 27:
@@ -155,18 +199,28 @@ def arrow_move():
                 move = [0, 0]
 
                 if key == 65:  # Up arrow key
-                    move[1] += 1
+                    move[1] += ARROW_STEP
                 elif key == 66:  # Down arrow key
-                    move[1] -= 1
+                    move[1] -= ARROW_STEP
                 elif key == 67:  # Right arrow key
-                    move[0] += 1
+                    move[0] += ARROW_STEP
                 elif key == 68:  # Left arrow key
-                    move[0] -= 1
+                    move[0] -= ARROW_STEP
 
                 command = f"G1F200X{d.mpos[0] + move[0]}Y{d.mpos[1] + move[1]}"
                 limiter_cycle(d, command)
-
-        elif esc == 99:
+        elif esc == 32:
+            points.append(d.mpos)
+        elif esc == 13:
+            with open(f"{prefix}-{N}.dat", "w") as f:
+                for point in points:
+                    f.write(f"{point[0]},{point[1]}\n")
+            N += 1
+            points.clear()
+        elif esc == ord('p'):
+            prefix = input("Please input the prefix of the file name: ")
+            N = 0
+        elif esc == ord('q'):
             break
 
 def main():
@@ -178,10 +232,13 @@ def main():
 
     limiter_cycle(d, "")
 
-    home_a(d)
-    home_b(d)
+    while True:
+        home_a(d)
+        home_b(d)
 
-    arrow_move()
+        limiter_cycle(d, f"G1F1000X{d.home[0] + 105}Y{d.home[1] + 348}")
+
+    arrow_move(d)
 
 if __name__ == "__main__":
     main()
