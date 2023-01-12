@@ -7,29 +7,40 @@ from getch import getch
 
 class Device:
     class TimeoutError(Exception):
-        def __init__(self, message):
+        def __init__(self, message=""):
             self.message = message
 
     class DeviceNeedResetError(Exception):
-        pass
+        def __init__(self, message=""):
+            self.message = message
+
+    class DeviceMalfunction(Exception):
+        def __init__(self, message=""):
+            self.message = message
 
     def __init__(self, port_name, baudrate, retries = 3):
         self.ser = serial.Serial(port_name, baudrate=baudrate, timeout=0.1) # opens serial port
         self.retries = retries
         self.status = ""
         self.mpos = (0,0)
-        self.home = (0,0)
+        self.home = [0,0]
 
     def get_status(self):
-        response = self.command("?", wait = "<", endline = False)
-        parts = response.split("|")
-        self.status = parts[0][1:]
+        retry_count = 0
+        while retry_count < self.retries:
+            response = self.command("?", wait = "<", endline = False)
+            parts = response.split("|")
+            status = parts[0][1:]
 
-        mpos_str = parts[1].split(":")[1]
-        mpos_list = mpos_str.split(",")
-        x = float(mpos_list[0])
-        y = float(mpos_list[1])
-        self.mpos = (x,y)
+            if status in ["Alarm", "Run", "Idle"]:
+                self.status = status
+                mpos_str = parts[1].split(":")[1]
+                mpos_list = mpos_str.split(",")
+                x = float(mpos_list[0])
+                y = float(mpos_list[1])
+                self.mpos = (x,y)
+                break
+
         return (self.status, self.mpos)
 
     def reset(self):
@@ -87,8 +98,54 @@ class Device:
         print(">^X")
         self.ser.write(b'\x18')
 
-def limiter_cycle(d, command):
-    try:
+class ControllerParameters:
+    def __init__(self):
+        self.w = 450
+        self.retract_length = 2
+        self.y_init_retract = 5
+
+class Controller:
+    def __init__(self, device, param = ControllerParameters()):
+        self.device = device
+        self.param = param
+
+    def reset_retract(self, ):
+        d = self.device
+
+        d.reset()
+        d.command("$21=0")
+
+        status, mpos = d.get_status()
+
+        if status == "Alarm":
+            d.command("$X")
+
+        retraction_target = (mpos[0] + self.param.retract_length, mpos[1] + self.param.retract_length)
+
+        while abs(d.mpos[0] - retraction_target[0]) > 0.01 or abs(d.mpos[1] - retraction_target[1]) > 0.01:
+            d.command(f"G1F1000X{retraction_target[0]}Y{retraction_target[1]}")
+
+            while True:
+                status, mpos = d.get_status()
+                print("status:", status)
+                print(f"X:{mpos[0]} Y:{mpos[1]}")
+                if status != "Run":
+                    break
+                time.sleep(0.5)
+
+        d.command("$21=1")
+
+    def disable_y(self):
+        self.device.command("M08")
+        self.device.command("M05")
+
+    def enable_both(self):
+        self.device.command("M09")
+        self.device.command("M05")
+
+    def wait_run(self, command, timeout=None):
+        d = self.device
+        start_time = time.time()
         d.command(command)
         while True:
             status, mpos = d.get_status()
@@ -96,93 +153,58 @@ def limiter_cycle(d, command):
             print(f"X:{mpos[0]} Y:{mpos[1]}")
             if status != "Run":
                 break
-            time.sleep(0.5)
-    except Device.DeviceNeedResetError:
-        d.reset()
-
-def home_a(d):
-    def homing_cycle(speed):
-        d.command("$21=1")
-        limiter_cycle(d, f"G1F{speed}X-2000")
-
-        status, mpos = d.get_status()
-        print("status:", status)
-        print(f"X:{mpos[0]} Y:{mpos[1]}")
-
-        d.command("$21=0")
-
-        if status == "Alarm":
-            d.command("$X")
-
-        d.home = d.mpos
-        retract = d.home[0] + 4
-        while True:
-            limiter_cycle(d, f"G1F1000X{retract}")
-
-            if(abs(d.mpos[0] - retract) < 0.01):
-                break
-        d.command("$21=1")
-
-    # A homing
-    while True:
-        try:
-            d.command("M08")
-            d.command("M05")
-            break
-        except Device.DeviceNeedResetError:
-            d.reset()
-            status, mpos = d.get_status()
             if status == "Alarm":
-                d.command("$X")
+                raise Device.DeviceNeedResetError("Alarm status")
+            if timeout and (time.time() - start_time) > timeout:
+                raise Device.DeviceMalfunction("Timeout")
 
-    # fast homing
-    homing_cycle(1000)
-    homing_cycle(50)
-
-W = 420
-def home_b(d):
-    target = (d.home[0] + W, d.home[1] - W)
-
-    def homing_cycle(speed):
-        d.command("$21=1")
-        limiter_cycle(d, f"G1F{speed}X{target[0]}Y{target[1]}")
-
-        status, mpos = d.get_status()
-        print("status:", status)
-        print(f"X:{mpos[0]} Y:{mpos[1]}")
-
-        d.command("$21=0")
-
-        if status == "Alarm":
-            d.command("$X")
-
-        d.home = (d.home[0], d.mpos[1])
-        retract = d.home[1] + 4
-        while True:
-            limiter_cycle(d, f"G1F1000Y{retract}")
-
-            if(abs(d.mpos[1] - retract) < 0.01):
-                break
+    def homing_cycle(self, speed, target, update_home, timeout = None):
+        d = self.device
 
         d.command("$21=1")
-
-
-    # B homing
-    while True:
         try:
-            d.command("M09")
-            d.command("M05")
-            break
+            self.wait_run(f"G1F{speed}X{target[0]}Y{target[1]}", timeout = timeout)
+            raise RuntimeError("device go to very far point, maybe mechanical issue")
         except Device.DeviceNeedResetError:
-            d.reset()
-            status, mpos = d.get_status()
-            if status == "Alarm":
-                d.command("$X")
+            for idx in update_home:
+                d.home[idx] = d.mpos[idx]
+            self.reset_retract()
 
+    def home_axis(self, target, update_home, disable_y=False):
+        d = self.device
 
-    # fast homing
-    homing_cycle(1000)
-    homing_cycle(50)
+        while True:
+            try:
+                if disable_y:
+                    self.disable_y()
+                else:
+                    self.enable_both()
+
+                break
+            except Device.DeviceNeedResetError:
+                self.reset_retract()
+
+        self.homing_cycle(1000, target, update_home)
+
+        if disable_y:
+            print("additional retract for y")
+            self.enable_both()
+            self.wait_run(f"G1F1000Y{d.mpos[1] + self.param.y_init_retract}")
+
+        self.homing_cycle(50, target, update_home, timeout = 5)
+
+        if disable_y:
+            print("return y back")
+            self.wait_run(f"G1F1000Y{d.mpos[1] - self.param.y_init_retract}")
+
+    def home(self):
+        d = self.device
+
+        try:
+            self.home_axis((-2000, 0), [0, 1], disable_y = True) # home A
+            self.home_axis((d.home[0] + self.param.w, d.home[1] - self.param.w), [1]) # home B
+        except Device.DeviceNeedResetError:
+            raise Device.DeviceMalfunction("Unhandled reset")
 
 def arrow_move(d):
     ARROW_STEP = 2
@@ -223,22 +245,33 @@ def arrow_move(d):
         elif esc == ord('q'):
             break
 
+def run_cycle(controller):
+    try:
+        controller.wait_run("")
+    except Device.DeviceNeedResetError:
+        controller.reset_retract()
+
+    while True:
+        controller.home()
+        zero_position = (controller.device.home[0] + 105, controller.device.home[1] + 348)
+        controller.wait_run(f"G1F1000X{zero_position[0]}Y{zero_position[1]}")
+
+    arrow_move(d)
+
 def main():
     # Usage example:
     d = Device("/dev/ttyUSB0", 115200)
-
     d.reset()
     print("device resetted succesfully")
 
-    limiter_cycle(d, "")
+    controller = Controller(d)
 
     while True:
-        home_a(d)
-        home_b(d)
-
-        limiter_cycle(d, f"G1F1000X{d.home[0] + 105}Y{d.home[1] + 348}")
-
-    arrow_move(d)
+        try:
+            run_cycle(controller)
+        except Device.DeviceMalfunction as e:
+            print("device malfunction", e, "back to home")
+            controller.reset_retract()
 
 if __name__ == "__main__":
     main()
