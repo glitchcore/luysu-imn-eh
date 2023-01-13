@@ -1,3 +1,4 @@
+import logging
 import serial
 import time
 
@@ -48,7 +49,7 @@ class Device:
                     if "Grbl" in line:
                         return
             except Device.TimeoutError:
-                print("Timeout while resetting device, retrying...")
+                logging.info("Timeout while resetting device, retrying...")
         raise ValueError("Device is not responding after reset.")
 
     def command(self, command, wait = "ok", endline = True):
@@ -66,11 +67,11 @@ class Device:
                         return line
             except Device.TimeoutError as e:
                     retry_count += 1
-                    print("Timeout while reading response from device, retrying...")
+                    logging.info("Timeout while reading response from device, retrying...")
         raise ValueError("Device is not responding after multiple retries.")
             
     def write_command(self, command):
-        print(">", command)
+        logging.info("> %s", command)
         self.ser.write(command.encode())
         time.sleep(0.1)
 
@@ -86,10 +87,10 @@ class Device:
                         raise Device.TimeoutError("Read timeout")
                 else:
                     break
-            # print("<", line.strip())
+            logging.debug("< %s", line.strip())
             response.append(line.strip())
         return response
-    
+
     def send_ctrl_x(self):
-        print(">^X")
+        logging.info(">^X")
         self.ser.write(b'\x18')
