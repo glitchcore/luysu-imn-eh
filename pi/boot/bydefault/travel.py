@@ -90,7 +90,7 @@ class Device:
                         raise Device.TimeoutError("Read timeout")
                 else:
                     break
-            print("<", line.strip())
+            # print("<", line.strip())
             response.append(line.strip())
         return response
     
@@ -127,8 +127,8 @@ class Controller:
 
             while True:
                 status, mpos = d.get_status()
-                print("status:", status)
-                print(f"X:{mpos[0]} Y:{mpos[1]}")
+                # print("status:", status)
+                # print(f"X:{mpos[0]} Y:{mpos[1]}")
                 if status != "Run":
                     break
                 time.sleep(0.5)
@@ -149,8 +149,8 @@ class Controller:
         d.command(command)
         while True:
             status, mpos = d.get_status()
-            print("status:", status)
-            print(f"X:{mpos[0]} Y:{mpos[1]}")
+            # print("status:", status)
+            # print(f"X:{mpos[0]} Y:{mpos[1]}")
             if status != "Run":
                 break
             if status == "Alarm":
