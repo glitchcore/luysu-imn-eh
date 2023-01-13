@@ -6,6 +6,7 @@ class ControllerParameters:
         self.w = 450
         self.retract_length = 2
         self.y_init_retract = 5
+        self.draw_speed = 300
 
 class Controller:
     def __init__(self, device, param = ControllerParameters()):
@@ -108,3 +109,31 @@ class Controller:
             self.home_axis((d.home[0] + self.param.w, d.home[1] - self.param.w), [1]) # home B
         except Device.DeviceNeedResetError:
             raise Device.DeviceMalfunction("Unhandled reset")
+
+    def run_cycle(self):
+        while True:
+            try:
+                # TODO here device is not ready
+                try:
+                    self.wait_run("")
+                except Device.DeviceNeedResetError:
+                    self.reset_retract()
+
+                self.home()
+
+                # TODO here device has become ready
+
+                while True:
+                    # TODO get task sended by interact method
+                    # target = ...
+                    position = (self.device.home[0] + target[0], self.device.home[1] + target[0])
+                    self.wait_run(f"G1F{self.param.draw_speed}X{zero_position[0]}Y{zero_position[1]}")
+
+            except Device.DeviceMalfunction as e:
+                logging.info(f"Device malfunction: {e}. Back to home")
+                self.reset_retract()
+                # TODO here device has become not ready
+
+    def interact(self, task):
+        # TODO if device not ready, return not_ready status
+        # send command to run_cycle
