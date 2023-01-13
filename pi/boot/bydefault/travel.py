@@ -1,12 +1,13 @@
+import logging
 import serial
 import time
-
 import termios
 import tty
 from getch import getch
-
 from device import Device
 from controller import ControllerParameters, Controller
+
+logging.basicConfig(level=logging.INFO)
 
 def arrow_move(d):
     ARROW_STEP = 2
@@ -61,10 +62,9 @@ def run_cycle(controller):
     arrow_move(d)
 
 def main():
-    # Usage example:
     d = Device("/dev/ttyUSB0", 115200)
     d.reset()
-    print("device resetted succesfully")
+    logging.info("Device reset successfully")
 
     controller = Controller(d)
 
@@ -72,7 +72,7 @@ def main():
         try:
             run_cycle(controller)
         except Device.DeviceMalfunction as e:
-            print("device malfunction", e, "back to home")
+            logging.info(f"Device malfunction: {e}. Back to home")
             controller.reset_retract()
 
 if __name__ == "__main__":
