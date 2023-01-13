@@ -1,4 +1,5 @@
 import time
+import logging
 
 class ControllerParameters:
     def __init__(self):
@@ -29,8 +30,8 @@ class Controller:
 
             while True:
                 status, mpos = d.get_status()
-                # print("status:", status)
-                # print(f"X:{mpos[0]} Y:{mpos[1]}")
+                logging.debug("status: %s", status)
+                logging.debug("X: %s Y: %s", mpos[0], mpos[1])
                 if status != "Run":
                     break
                 time.sleep(0.5)
@@ -51,8 +52,8 @@ class Controller:
         d.command(command)
         while True:
             status, mpos = d.get_status()
-            # print("status:", status)
-            # print(f"X:{mpos[0]} Y:{mpos[1]}")
+            logging.debug("status: %s", status)
+            logging.debug("X: %s Y: %s", mpos[0], mpos[1])
             if status != "Run":
                 break
             if status == "Alarm":
@@ -89,14 +90,14 @@ class Controller:
         self.homing_cycle(1000, target, update_home)
 
         if disable_y:
-            print("additional retract for y")
+            logging.info("additional retract for y")
             self.enable_both()
             self.wait_run(f"G1F1000Y{d.mpos[1] + self.param.y_init_retract}")
 
         self.homing_cycle(50, target, update_home, timeout = 5)
 
         if disable_y:
-            print("return y back")
+            logging.info("return y back")
             self.wait_run(f"G1F1000Y{d.mpos[1] - self.param.y_init_retract}")
 
     def home(self):
