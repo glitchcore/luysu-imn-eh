@@ -5,9 +5,6 @@ import termios
 import tty
 from getch import getch
 
-from device import Device
-from controller import ControllerParameters, Controller
-
 logging.basicConfig(level=logging.INFO)
 
 def arrow_move(d):

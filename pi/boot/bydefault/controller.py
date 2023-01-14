@@ -1,5 +1,8 @@
 import time
 import logging
+import threading
+
+from device import Device
 
 class ControllerParameters:
     def __init__(self):
@@ -12,6 +15,9 @@ class Controller:
     def __init__(self, device, param = ControllerParameters()):
         self.device = device
         self.param = param
+        self.ready = False
+        self.task = None
+        self.task_event = threading.Event()
 
     def reset_retract(self, ):
         d = self.device
@@ -113,7 +119,6 @@ class Controller:
     def run_cycle(self):
         while True:
             try:
-                # TODO here device is not ready
                 try:
                     self.wait_run("")
                 except Device.DeviceNeedResetError:
@@ -121,19 +126,30 @@ class Controller:
 
                 self.home()
 
-                # TODO here device has become ready
+                self.ready = True
 
                 while True:
-                    # TODO get task sended by interact method
-                    # target = ...
-                    position = (self.device.home[0] + target[0], self.device.home[1] + target[0])
-                    self.wait_run(f"G1F{self.param.draw_speed}X{zero_position[0]}Y{zero_position[1]}")
+                    target = self.get_task()
+                    if target:
+                        position = (self.device.home[0] + target[0], self.device.home[1] + target[0])
+                        self.wait_run(f"G1F{self.param.draw_speed}X{zero_position[0]}Y{zero_position[1]}")
 
             except Device.DeviceMalfunction as e:
+                self.ready = False
                 logging.info(f"Device malfunction: {e}. Back to home")
                 self.reset_retract()
-                # TODO here device has become not ready
 
     def interact(self, task):
-        # TODO if device not ready, return not_ready status
-        # send command to run_cycle
+        if not self.ready:
+            return "not_ready"
+        self.set_task(task)
+        return "success"
+
+    def set_task(self, task):
+        self.task = task
+        self.task_event.set()
+
+    def get_task(self):
+        self.task_event.wait()
+        self.task_event.clear()
+        return self.task
