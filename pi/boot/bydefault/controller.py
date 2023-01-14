@@ -110,7 +110,7 @@ class Controller:
         except Device.DeviceNeedResetError:
             raise Device.DeviceMalfunction("Unhandled reset")
 
-    def run_cycle(self):
+    '''def run_cycle(self):
         while True:
             try:
                 # TODO here device is not ready
@@ -137,3 +137,4 @@ class Controller:
     def interact(self, task):
         # TODO if device not ready, return not_ready status
         # send command to run_cycle
+    '''
