@@ -1,5 +1,6 @@
 import time
 import logging
+from device import Device
 
 class ControllerParameters:
     def __init__(self):
