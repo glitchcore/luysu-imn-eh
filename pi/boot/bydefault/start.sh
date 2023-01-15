@@ -2,23 +2,15 @@
 
 trap ctrl_c INT
 
-list_descendants () {
-  local children=$(ps -o pid= --ppid "$1")
-
-  for pid in $children; do
-    list_descendants "$pid"
-  done
-
-  echo "$children"
-}
-
 function ctrl_c() {
     echo "go away by default"
 
-    kill -15 http_server
+    kill $http_server
 
     exit 0
 }
 
 python3 -m http.server --directory /boot/bydefault/web/ & http_server=$!
 python3 -u travel.py
+
+# chromium --enable-logging=stderr --start-fullscreen  --noerrdialogs --disable-translate --no-first-run --disable-infobars --window-position=0,0 --window-size=1920,1100
