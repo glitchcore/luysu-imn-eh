@@ -4,7 +4,7 @@ from device import Device
 
 class ControllerParameters:
     def __init__(self):
-        self.w = 450
+        self.w = 550
         self.retract_length = 2
         self.y_init_retract = 5
         self.draw_speed = 300
@@ -62,6 +62,7 @@ class Controller:
                 raise Device.DeviceNeedResetError("Alarm status")
             if timeout and (time.time() - start_time) > timeout:
                 raise Device.DeviceMalfunction("Timeout")
+        logging.info(f"pos: {d.mpos}")
 
     def homing_cycle(self, speed, target, update_home, timeout = None):
         d = self.device
@@ -110,6 +111,8 @@ class Controller:
             self.home_axis((d.home[0] + self.param.w, d.home[1] - self.param.w), [1]) # home B
         except Device.DeviceNeedResetError:
             raise Device.DeviceMalfunction("Unhandled reset")
+
+        logging.info(f"home: {d.home}")
 
     '''def run_cycle(self):
         while True:

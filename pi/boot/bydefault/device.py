@@ -71,7 +71,11 @@ class Device:
         raise ValueError("Device is not responding after multiple retries.")
             
     def write_command(self, command):
-        logging.info("> %s", command)
+        if command != "?":
+            logging.info("> %s", command)
+        else:
+            logging.debug("> %s", command)
+        
         self.ser.write(command.encode())
         time.sleep(0.1)
 
