@@ -7,8 +7,8 @@ from getch import getch
 
 logging.basicConfig(level=logging.INFO)
 
-def arrow_move(d):
-    ARROW_STEP = 2
+def arrow_move(controller):
+    ARROW_STEP = 0.5
 
     prefix = input("Please input the prefix of the file name: ")
     N = 0
@@ -22,16 +22,19 @@ def arrow_move(d):
                 move = [0, 0]
 
                 if key == 65:  # Up arrow key
+                    move[0] += ARROW_STEP
                     move[1] += ARROW_STEP
                 elif key == 66:  # Down arrow key
+                    move[0] -= ARROW_STEP
                     move[1] -= ARROW_STEP
                 elif key == 67:  # Right arrow key
-                    move[0] += ARROW_STEP
-                elif key == 68:  # Left arrow key
                     move[0] -= ARROW_STEP
+                    move[1] += ARROW_STEP
+                elif key == 68:  # Left arrow key
+                    move[0] += ARROW_STEP
+                    move[1] -= ARROW_STEP
 
-                command = f"G1F200X{d.mpos[0] + move[0]}Y{d.mpos[1] + move[1]}"
-                limiter_cycle(d, command)
+                controller.wait_run(f"G1F1000X{controller.device.mpos[0] + move[0]}Y{controller.device.mpos[1] + move[1]}")
         elif esc == 32:
             points.append(d.mpos)
         elif esc == 13:
@@ -52,15 +55,28 @@ def run_cycle(controller):
     except Device.DeviceNeedResetError:
         controller.reset_retract()
 
-    while True:
+    '''while True:
         controller.home()
         zero_position = (controller.device.home[0] + 105, controller.device.home[1] + 348)
         controller.wait_run(f"G1F1000X{zero_position[0]}Y{zero_position[1]}")
+    '''
 
-    arrow_move(d)
+    # controller.home_axis((-2000, 0), [0, 1], disable_y = True) # home A
+    
+    controller.home()
+    # (-409.508, -70.844)
+    zero_position = (controller.device.home[0] + 90.5, controller.device.home[1] + 413.5)
+    controller.wait_run(f"G1F1000X{zero_position[0]}Y{zero_position[1]}")
+
+    # arrow_move(controller)
+
+    #controller.home_axis(
+    #    (controller.device.home[0] + controller.param.w, controller.device.home[1] - controller.param.w), [1])
+
+    arrow_move(controller)
 
 def main():
-    d = Device("/dev/ttyUSB0", 115200)
+    d = Device("/dev/serial/by-id/usb-1a86_USB2.0-Ser_-if00-port0", 115200)
     d.reset()
     logging.info("Device reset successfully")
 

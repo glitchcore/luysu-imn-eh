@@ -1,4 +1,4 @@
-(function() {
+function on_load(){
     function getCookie(cname) {
         let name = cname + "=";
         let decodedCookie = decodeURIComponent(document.cookie);
@@ -168,6 +168,7 @@
         searchParams.set("targets", JSON.stringify(elements_list));
         let newUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?${searchParams.toString()}`;
         window.history.pushState({ path: newUrl }, '', newUrl);
+        console.log("new url", newUrl);
     });
 
-}).call(this);
+}

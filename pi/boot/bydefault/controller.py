@@ -1,12 +1,11 @@
 import time
 import logging
 import threading
-
 from device import Device
 
 class ControllerParameters:
     def __init__(self):
-        self.w = 450
+        self.w = 550
         self.retract_length = 2
         self.y_init_retract = 5
         self.draw_speed = 300
@@ -67,6 +66,7 @@ class Controller:
                 raise Device.DeviceNeedResetError("Alarm status")
             if timeout and (time.time() - start_time) > timeout:
                 raise Device.DeviceMalfunction("Timeout")
+        logging.info(f"pos: {d.mpos}")
 
     def homing_cycle(self, speed, target, update_home, timeout = None):
         d = self.device
@@ -116,7 +116,9 @@ class Controller:
         except Device.DeviceNeedResetError:
             raise Device.DeviceMalfunction("Unhandled reset")
 
-    def run_cycle(self):
+        logging.info(f"home: {d.home}")
+
+    '''def run_cycle(self):
         while True:
             try:
                 try:
@@ -153,3 +155,6 @@ class Controller:
         self.task_event.wait()
         self.task_event.clear()
         return self.task
+        # TODO if device not ready, return not_ready status
+        # send command to run_cycle
+    '''
