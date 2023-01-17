@@ -124,7 +124,7 @@ def run_cycle(controller):
     print("set home position:")
     arrow_move(controller)
 
-    triangle_controller = TriangleKinematic(controller, CALIB)
+    triangle_controller = TriangleKinematic(controller, CALIB, CALIB["fragments"]["chr"])
 
     triangle_controller.reset_home()
 

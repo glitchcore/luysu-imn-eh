@@ -52,10 +52,12 @@ def mach2grbl(mach, calib):
     )
 
 class TraingleKinematic:
-    def __init__(self, controller, calib):
+    def __init__(self, controller, calib, reference_points):
         self.controller = controller
         self.calib = calib
         self.pos = (0, 0)
+
+        self.transform = get_transformation_matrix_dlt(normalized_rect, reference_points)
 
         self.update_from_controller()
 
@@ -69,6 +71,9 @@ class TraingleKinematic:
         mach_pos = cart2mach(pos, self.calib)
         grbl_pos = mach2grbl(mach_pos, self.calib)
         self.controller.move(grbl_pos)
+
+    def move_normalized(self, pos):
+        self.move(denormalize_coordinates(pos, self.transform))
 
     def update_from_controller(self):
         self.pos = mach2cart(self.controller.pos, self.calib)
