@@ -6,7 +6,7 @@ import tty
 from getch import getch
 
 from device import Device
-from controller import ControllerParameters, Controller
+from motion_controller import MotionControllerParameters, MotionController
 
 logging.basicConfig(level=logging.INFO)
 
@@ -59,14 +59,14 @@ def run_cycle(controller):
         controller.reset_retract()
 
     '''while True:
-        controller.home()
+        controller.homing()
         zero_position = (controller.home[0] + 105, controller.home[1] + 348)
         controller.wait_run(f"G1F1000X{zero_position[0]}Y{zero_position[1]}")
     '''
 
     # controller.home_a() # home A
     
-    controller.home()
+    controller.homing()
     controller.move(90.5, 413.5, 1000)
 
     # arrow_move(controller)
@@ -80,7 +80,7 @@ def main():
     d.reset()
     logging.info("Device reset successfully")
 
-    controller = Controller(d)
+    controller = MotionController(d)
 
     while True:
         try:

@@ -75,7 +75,7 @@ class MotionController:
             raise RuntimeError("device go to very far point, maybe mechanical issue")
         except Device.DeviceNeedResetError:
             for idx in update_home:
-                self.home[idx] = self.mpos[idx]
+                self.home[idx] = self.device.mpos[idx]
             self.reset_retract()
 
     def home_axis(self, target, update_home, disable_y=False):
@@ -111,7 +111,7 @@ class MotionController:
     def home_b(self):
         self.home_axis((self.home[0] + self.param.w, self.home[1] - self.param.w), [1])
 
-    def home(self):
+    def homing(self):
         try:
             self.home_a()
             self.home_b()
@@ -120,7 +120,10 @@ class MotionController:
 
         logging.info(f"home: {self.home}")
     
-    def move(self, x = None, y = None, speed = self.param.draw_speed):
+    def move(self, x = None, y = None, speed = None):
+        if speed is None:
+            speed = self.param.draw_speed
+
         cmd = f"G1F{speed}"
         if x is not None:
             cmd += f"X{self.home[0] + x}"
