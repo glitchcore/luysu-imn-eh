@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="2096"
+   height="1144"
+   viewBox="0 0 554.56665 302.68332"
+   version="1.1"
+   id="svg6679"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   sodipodi:docname="damba-kad-damba.svg">
+  <defs
+     id="defs6673" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.5"
+     inkscape:cx="1883.1635"
+     inkscape:cy="843.37689"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     units="px"
+     inkscape:window-width="1366"
+     inkscape:window-height="715"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata6676">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-1.666421e-4,9.7194934e-5)">
+    <image
+       sodipodi:absref="/home/aanper/project/luysy-imn-eh/pi/boot/bydefault/web/img/damba.png"
+       xlink:href="/home/aanper/project/luysy-imn-eh/pi/boot/bydefault/web/img/damba.png"
+       width="554.56665"
+       height="302.68332"
+       preserveAspectRatio="none"
+       id="image7283"
+       x="0.0001666421"
+       y="-9.7194934e-05" />
+    <circle
+       style="fill:none;fill-opacity:1;stroke:#00ff00;stroke-width:0.30000001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+       id="path7286"
+       cx="472.21198"
+       cy="65.454803"
+       r="3.7417734" />
+    <ellipse
+       style="fill:none;fill-opacity:1;stroke:#00ff00;stroke-width:0.30000001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+       id="path7288"
+       cx="313.5314"
+       cy="230.31969"
+       rx="1.0583333"
+       ry="0.92604166" />
+    <circle
+       style="fill:none;fill-opacity:1;stroke:#00ff00;stroke-width:0.30000001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+       id="path7290"
+       cx="367.50641"
+       cy="260.61447"
+       r="0.79374999" />
+    <path
+       style="fill:none;fill-opacity:1;stroke:#00ff00;stroke-width:0.30000001;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+       d="m 553.50849,48.683236 c -2.59114,0.762685 -5.27462,0.529166 -7.9375,0.529166 -0.426,0 -1.78453,-0.110709 -2.11666,0 -0.37418,0.124727 -0.68416,0.404442 -1.05834,0.529167 -0.29855,0.09952 -1.23978,0 -1.5875,0 -1.23473,0 -2.46943,0 -3.70416,0 -1.19552,0 0.23664,-0.07888 -1.5875,0.529167 -0.42593,0.141975 -1.77853,-0.169075 -2.11667,0 -0.22312,0.111558 -0.29252,0.450283 -0.52917,0.529166 -0.24204,0.08068 -1.88121,-0.117731 -2.11666,0 -0.22313,0.111559 -0.30605,0.417611 -0.52917,0.529167 -0.33261,0.166298 -1.78409,-0.166296 -2.11667,0 -0.22312,0.111559 -0.29252,0.450284 -0.52916,0.529166 -2.40893,0 -0.0303,-0.249449 -1.5875,0.529167 -0.31555,0.157769 -0.80889,-0.249449 -1.05834,0 -0.12472,0.124727 0.12473,0.404442 0,0.529167 -0.26458,0.264583 -1.32291,-0.264584 -1.5875,0 -0.12472,0.124727 0.12473,0.404442 0,0.529166 -0.0821,0.08212 -1.3816,-0.06864 -1.5875,0 -0.74834,0.249452 -1.36832,0.808885 -2.11666,1.058334 -0.16735,0.05578 -0.35804,-0.04278 -0.52917,0 -1.08228,0.270568 -2.08108,0.839552 -3.175,1.058333 -0.34594,0.06919 -0.71242,-0.06918 -1.05833,0 -1.07667,-0.183787 -1.7144,0.872048 -2.64584,1.058333 -0.5189,0.103781 -1.0686,-0.103777 -1.5875,0 -0.38676,0.07735 -0.66929,0.464326 -1.05833,0.529167 -5.53318,0 0.20381,-0.315534 -3.175,0.529167 -0.6845,0.171124 -1.44732,-0.223115 -2.11667,0 -0.23664,0.07888 -0.29252,0.450284 -0.52916,0.529166 -1.5875,0.529167 -0.52917,-0.264583 -1.5875,0 -5.75517,1.918386 1.39448,-0.278894 -2.64584,0.529167 -0.54697,0.109392 -1.04055,0.419777 -1.5875,0.529167 -0.34591,0.06919 -0.71609,-0.08556 -1.05833,0 -0.38264,0.09566 -0.67157,0.451815 -1.05833,0.529166 -3.75325,0 -0.30999,-0.374176 -2.11667,0.529167 -0.33261,0.166299 -1.78408,-0.166296 -2.11667,0 -0.22312,0.111559 -0.35277,0.35278 -0.52916,0.529167 -0.35277,0 -0.72366,-0.111557 -1.05834,0 -0.23664,0.07888 -0.29252,0.450283 -0.52916,0.529166 -0.33467,0.111559 -0.7161,-0.08556 -1.05834,0 -2.74772,0.686935 0.56492,0.529167 -2.11666,0.529167 -0.2767,0 -1.97753,-0.06957 -2.11667,0 -0.22312,0.111559 -0.30604,0.41761 -0.52917,0.529167 -0.42333,0.211666 -1.16416,-0.211667 -1.5875,0 -0.22312,0.111559 -0.29252,0.450283 -0.52916,0.529166 -0.66935,0.223118 -1.43219,-0.171122 -2.11667,0 -0.38264,0.09566 -0.68416,0.404442 -1.05833,0.529167 -0.33467,0.111559 -0.74279,-0.157766 -1.05834,0 -0.22312,0.111559 -0.30604,0.41761 -0.52916,0.529167 -0.33261,0.166298 -1.78409,-0.166296 -2.11667,0 -0.22312,0.111559 -0.30604,0.41761 -0.52917,0.529166 -0.33586,0.167931 -2.47427,-0.171553 -2.64583,0 -0.12472,0.124728 0.12473,0.404442 0,0.529167 -0.12472,0.124727 -0.35277,0 -0.52917,0 -0.17639,0 -0.35276,0 -0.52916,0"
+       id="path7292"
+       inkscape:connector-curvature="0" />
+  </g>
+</svg>
