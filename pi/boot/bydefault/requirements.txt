@@ -1,2 +1,2 @@
 websockets==10.4
-aioconsole==0.5.1
+getch==1.0

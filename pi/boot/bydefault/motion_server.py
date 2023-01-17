@@ -1,15 +1,16 @@
 import asyncio
 import websockets
-import logger
+import logging
 
 from protocol import *
 
 async def server_loop(ws):
     try:
+        await ws.send('{"x": 0, "y": 0}')
         async for msg in ws:
             print(msg)
     except Exception as ex:
-        logger.info(f'Client session error: {ex}')
+        logging.info(f'Client session error: {ex}')
         raise       
 
 async def main():
