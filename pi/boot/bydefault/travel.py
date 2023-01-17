@@ -37,7 +37,7 @@ def arrow_move(controller):
                     move[0] += ARROW_STEP
                     move[1] -= ARROW_STEP
 
-                controller.wait_run(f"G1F1000X{controller.device.mpos[0] + move[0]}Y{controller.device.mpos[1] + move[1]}")
+                controller.move(controller.pos[0] + move[0], controller.pos[1] + move[1])
         elif esc == 32:
             points.append(d.mpos)
         elif esc == 13:
@@ -64,17 +64,14 @@ def run_cycle(controller):
         controller.wait_run(f"G1F1000X{zero_position[0]}Y{zero_position[1]}")
     '''
 
-    # controller.home_axis((-2000, 0), [0, 1], disable_y = True) # home A
+    # controller.home_a() # home A
     
     controller.home()
-    # (-409.508, -70.844)
-    zero_position = (controller.home[0] + 90.5, controller.home[1] + 413.5)
-    controller.wait_run(f"G1F1000X{zero_position[0]}Y{zero_position[1]}")
+    controller.move(90.5, 413.5, 1000)
 
     # arrow_move(controller)
 
-    #controller.home_axis(
-    #    (controller.home[0] + controller.param.w, controller.home[1] - controller.param.w), [1])
+    # controller.home_b()
 
     arrow_move(controller)
 

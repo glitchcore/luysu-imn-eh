@@ -105,16 +105,35 @@ class MotionController:
             logging.info("return y back")
             self.wait_run(f"G1F1000Y{d.mpos[1] - self.param.y_init_retract}")
 
-    def home(self):
-        d = self.device
+    def home_a(self):
+        self.home_axis((-2000, 0), [0, 1], disable_y = True)
 
+    def home_b(self):
+        self.home_axis((self.home[0] + self.param.w, self.home[1] - self.param.w), [1])
+
+    def home(self):
         try:
-            self.home_axis((-2000, 0), [0, 1], disable_y = True) # home A
-            self.home_axis((self.home[0] + self.param.w, self.home[1] - self.param.w), [1]) # home B
+            self.home_a()
+            self.home_b()
         except Device.DeviceNeedResetError:
             raise Device.DeviceMalfunction("Unhandled reset")
 
         logging.info(f"home: {self.home}")
+    
+    def move(self, x = None, y = None, speed = self.param.draw_speed):
+        cmd = f"G1F{speed}"
+        if x is not None:
+            cmd += f"X{self.home[0] + x}"
+        if y is not None:
+            cmd += f"Y{self.home[1] + y}"
+
+        self.wait_run(cmd)
+
+    @property
+    def pos(self):
+        mpos = self.device.mpos
+        return (mpos[0] - self.home[0], mpos[1] - self.home[1])
+
 
     '''def run_cycle(self):
         while True:
