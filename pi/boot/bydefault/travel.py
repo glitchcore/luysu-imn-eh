@@ -8,6 +8,9 @@ from getch import getch
 from device import Device
 from motion_controller import MotionControllerParameters, MotionController
 
+from calib_gallery import CALIB
+from geometry import TriangleKinematic
+
 logging.basicConfig(level=logging.INFO)
 
 '''
@@ -121,10 +124,12 @@ def run_cycle(controller):
     print("set home position:")
     arrow_move(controller)
 
-    controller.reset_home()
+    triangle_controller = TriangleKinematic(controller, CALIB)
+
+    triangle_controller.reset_home()
 
     print("move, please:")
-    arrow_move(controller)
+    arrow_move(triangle_controller)
 
     # arrow_move(controller)
 

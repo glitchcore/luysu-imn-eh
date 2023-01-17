@@ -1,6 +1,5 @@
 import numpy as np
 from math import *
-from calib_gallery import *
 
 def get_transformation_matrix_dlt(normalized_rect, plane_rect):
     X = np.array([point[0] for point in normalized_rect])
@@ -55,8 +54,11 @@ def mach2grbl(mach, calib):
 class TraingleKinematic:
     def __init__(self, controller, calib):
         self.controller = controller
-        self.pos = [0, 0]
         self.calib = calib
+        self.pos = (0, 0)
+
+        self.update_from_controller()
+
 
     def reset_home(self):
         self.pos = [0, 0]
@@ -67,6 +69,9 @@ class TraingleKinematic:
         mach_pos = cart2mach(pos, self.calib)
         grbl_pos = mach2grbl(mach_pos, self.calib)
         self.controller.move(grbl_pos)
+
+    def update_from_controller(self):
+        self.pos = mach2cart(self.controller.pos, self.calib)
 
 if __name__ == "__main__":
     normalize_test()

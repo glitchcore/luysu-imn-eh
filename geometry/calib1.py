@@ -1,4 +1,4 @@
-INIT_CALIB = {
+CALIB = {
     "W": 1198,
     "init_a": 578,
     "init_b": 1100,
