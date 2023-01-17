@@ -52,5 +52,21 @@ def mach2grbl(mach, calib):
         (mach[1] - calib["init_b"]) * calib["R"],
     )
 
+class TraingleKinematic:
+    def __init__(self, controller, calib):
+        self.controller = controller
+        self.pos = [0, 0]
+        self.calib = calib
+
+    def reset_home(self):
+        self.pos = [0, 0]
+        self.controller.reset_home()
+
+    def move(self, pos):
+        self.pos = pos
+        mach_pos = cart2mach(pos, self.calib)
+        grbl_pos = mach2grbl(mach_pos, self.calib)
+        self.controller.move(grbl_pos)
+
 if __name__ == "__main__":
     normalize_test()
