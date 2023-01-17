@@ -10,6 +10,7 @@ from motion_controller import MotionControllerParameters, MotionController
 
 logging.basicConfig(level=logging.INFO)
 
+'''
 def arrow_move(controller):
     ARROW_STEP = 0.5
 
@@ -51,6 +52,35 @@ def arrow_move(controller):
             N = 0
         elif esc == ord('q'):
             break
+'''
+def arrow_move(controller):
+    ARROW_STEP = 0.2
+
+    while True:
+        esc = ord(getch())
+        if esc == 27:
+            if ord(getch()) == 91:
+                key = ord(getch())
+                move = [0, 0]
+
+                if key == 65:  # Up arrow key
+                    move[0] -= ARROW_STEP
+                    move[1] -= ARROW_STEP
+                elif key == 66:  # Down arrow key
+                    move[0] += ARROW_STEP
+                    move[1] += ARROW_STEP
+                elif key == 67:  # Right arrow key
+                    move[0] += ARROW_STEP
+                    move[1] -= ARROW_STEP
+                elif key == 68:  # Left arrow key
+                    move[0] -= ARROW_STEP
+                    move[1] += ARROW_STEP
+
+                controller.move(controller.pos[0] + move[0], controller.pos[1] + move[1])
+                logging.info(f"pos: {controller.pos}")
+
+        elif esc == ord('q'):
+            break
 
 def run_cycle(controller):
     try:
@@ -67,13 +97,21 @@ def run_cycle(controller):
     # controller.home_a() # home A
     
     controller.homing()
-    controller.move(84, 414, 1000)
+    controller.move(84.5, 415.5, 1000)
+
+    print("set home position:")
+    arrow_move(controller)
+
+    controller.reset_home()
+
+    print("move, please:")
+    arrow_move(controller)
 
     # arrow_move(controller)
 
     # controller.home_b()
 
-    arrow_move(controller)
+    
 
 def main():
     d = Device("/dev/serial/by-id/usb-1a86_USB2.0-Ser_-if00-port0", 115200)
