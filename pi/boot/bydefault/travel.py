@@ -79,6 +79,25 @@ def arrow_move(controller):
                 controller.move(controller.pos[0] + move[0], controller.pos[1] + move[1])
                 logging.info(f"pos: {controller.pos}")
 
+        elif esc == ord('1'):
+            ARROW_STEP = 0.1
+            logging.info(f"step: {ARROW_STEP}")
+        elif esc == ord('2'):
+            ARROW_STEP = 0.5
+            logging.info(f"step: {ARROW_STEP}")
+        elif esc == ord('3'):
+            ARROW_STEP = 1
+            logging.info(f"step: {ARROW_STEP}")
+        elif esc == ord('4'):
+            ARROW_STEP = 5
+            logging.info(f"step: {ARROW_STEP}")
+        elif esc == ord('5'):
+            ARROW_STEP = 10
+            logging.info(f"step: {ARROW_STEP}")
+        elif esc == ord('6'):
+            ARROW_STEP = 20
+            logging.info(f"step: {ARROW_STEP}")
+
         elif esc == ord('q'):
             break
 
