@@ -64,7 +64,7 @@ class MotionController:
                 raise Device.DeviceNeedResetError("Alarm status")
             if timeout and (time.time() - start_time) > timeout:
                 raise Device.DeviceMalfunction("Timeout")
-        logging.info(f"pos: {self.pos}")
+        logging.debug(f"pos: {self.pos}")
 
     def homing_cycle(self, speed, target, update_home, timeout = None):
         d = self.device
@@ -121,6 +121,8 @@ class MotionController:
         logging.info(f"home: {self.home}")
     
     def move(self, x = None, y = None, speed = None):
+        logging.debug(f"home: {self.home}")
+
         if speed is None:
             speed = self.param.draw_speed
 
@@ -130,7 +132,12 @@ class MotionController:
         if y is not None:
             cmd += f"Y{self.home[1] + y}"
 
+        logging.debug(f"cmd: {cmd}")
+
         self.wait_run(cmd)
+
+    def reset_home(self, offset = (0, 0)):
+        self.home = (self.device.mpos[0] + offset[0], self.device.mpos[1] + offset[1])
 
     @property
     def pos(self):
