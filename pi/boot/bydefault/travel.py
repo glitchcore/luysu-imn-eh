@@ -5,6 +5,9 @@ import termios
 import tty
 from getch import getch
 
+from device import Device
+from controller import ControllerParameters, Controller
+
 logging.basicConfig(level=logging.INFO)
 
 def arrow_move(controller):
@@ -57,7 +60,7 @@ def run_cycle(controller):
 
     '''while True:
         controller.home()
-        zero_position = (controller.device.home[0] + 105, controller.device.home[1] + 348)
+        zero_position = (controller.home[0] + 105, controller.home[1] + 348)
         controller.wait_run(f"G1F1000X{zero_position[0]}Y{zero_position[1]}")
     '''
 
@@ -65,13 +68,13 @@ def run_cycle(controller):
     
     controller.home()
     # (-409.508, -70.844)
-    zero_position = (controller.device.home[0] + 90.5, controller.device.home[1] + 413.5)
+    zero_position = (controller.home[0] + 90.5, controller.home[1] + 413.5)
     controller.wait_run(f"G1F1000X{zero_position[0]}Y{zero_position[1]}")
 
     # arrow_move(controller)
 
     #controller.home_axis(
-    #    (controller.device.home[0] + controller.param.w, controller.device.home[1] - controller.param.w), [1])
+    #    (controller.home[0] + controller.param.w, controller.home[1] - controller.param.w), [1])
 
     arrow_move(controller)
 

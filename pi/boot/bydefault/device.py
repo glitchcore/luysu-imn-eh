@@ -20,7 +20,6 @@ class Device:
         self.retries = retries
         self.status = ""
         self.mpos = (0,0)
-        self.home = [0,0]
 
     def get_status(self):
         retry_count = 0

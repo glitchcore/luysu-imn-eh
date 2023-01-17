@@ -14,9 +14,7 @@ class MotionController:
     def __init__(self, device, param = MotionControllerParameters()):
         self.device = device
         self.param = param
-        self.ready = False
-        self.task = None
-        self.task_event = threading.Event()
+        self.home = [0, 0]
 
     def reset_retract(self, ):
         d = self.device
@@ -77,7 +75,7 @@ class MotionController:
             raise RuntimeError("device go to very far point, maybe mechanical issue")
         except Device.DeviceNeedResetError:
             for idx in update_home:
-                d.home[idx] = d.mpos[idx]
+                self.home[idx] = self.mpos[idx]
             self.reset_retract()
 
     def home_axis(self, target, update_home, disable_y=False):
@@ -112,11 +110,11 @@ class MotionController:
 
         try:
             self.home_axis((-2000, 0), [0, 1], disable_y = True) # home A
-            self.home_axis((d.home[0] + self.param.w, d.home[1] - self.param.w), [1]) # home B
+            self.home_axis((self.home[0] + self.param.w, self.home[1] - self.param.w), [1]) # home B
         except Device.DeviceNeedResetError:
             raise Device.DeviceMalfunction("Unhandled reset")
 
-        logging.info(f"home: {d.home}")
+        logging.info(f"home: {self.home}")
 
     '''def run_cycle(self):
         while True:
