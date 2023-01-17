@@ -71,7 +71,7 @@ class Device:
             
     def write_command(self, command):
         if command != "?":
-            logging.info("> %s", command)
+            logging.debug("> %s", command)
         else:
             logging.debug("> %s", command)
         
@@ -95,5 +95,5 @@ class Device:
         return response
 
     def send_ctrl_x(self):
-        logging.info(">^X")
+        logging.debug(">^X")
         self.ser.write(b'\x18')

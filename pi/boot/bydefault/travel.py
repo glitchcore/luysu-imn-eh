@@ -67,7 +67,7 @@ def run_cycle(controller):
     # controller.home_a() # home A
     
     controller.homing()
-    controller.move(90.5, 413.5, 1000)
+    controller.move(84, 414, 1000)
 
     # arrow_move(controller)
 

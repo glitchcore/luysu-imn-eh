@@ -7,7 +7,7 @@ class MotionControllerParameters:
     def __init__(self):
         self.w = 550
         self.retract_length = 2
-        self.y_init_retract = 5
+        self.y_init_retract = 10
         self.draw_speed = 300
 
 class MotionController:
@@ -64,7 +64,7 @@ class MotionController:
                 raise Device.DeviceNeedResetError("Alarm status")
             if timeout and (time.time() - start_time) > timeout:
                 raise Device.DeviceMalfunction("Timeout")
-        logging.info(f"pos: {d.mpos}")
+        logging.info(f"pos: {self.pos}")
 
     def homing_cycle(self, speed, target, update_home, timeout = None):
         d = self.device
