@@ -1,6 +1,7 @@
 import time
 import logging
 import threading
+
 from device import Device
 
 class MotionControllerParameters:
@@ -8,7 +9,7 @@ class MotionControllerParameters:
         self.w = 550
         self.retract_length = 2
         self.y_init_retract = 10
-        self.draw_speed = 300
+        self.draw_speed = 800
 
 class MotionController:
     def __init__(self, device: Device, param = MotionControllerParameters()):
