@@ -1,6 +1,9 @@
 import logging
 import serial
 import time
+import re
+
+BUFFER_SIZE_REGEX = re.compile('Bf:(\d+),\d+')
 
 class Device:
     class TimeoutError(Exception):
@@ -20,6 +23,7 @@ class Device:
         self.retries = retries
         self.status = ""
         self.mpos = (0,0)
+        self.buffer_capacity = 0
 
     def get_status(self):
         retry_count = 0
@@ -27,7 +31,6 @@ class Device:
             response = self.command("?", wait = "<", endline = False)
             parts = response.split("|")
             status = parts[0][1:]
-
             if status in ["Alarm", "Run", "Idle"]:
                 self.status = status
                 mpos_str = parts[1].split(":")[1]
@@ -35,6 +38,13 @@ class Device:
                 x = float(mpos_list[0])
                 y = float(mpos_list[1])
                 self.mpos = (x,y)
+
+                m = re.match(BUFFER_SIZE_REGEX, parts[2])
+                if m:
+                    self.buffer_capacity = int(m[1])
+                else:
+                    logging.warn(f'unable to get buffer size from status')
+           
                 break
 
         return (self.status, self.mpos)
