@@ -59,7 +59,7 @@ async def console_input_loop(mpos: Tuple[float, float], ws: websockets.client.We
             quit()
         elif esc == ord('w'):
             await ws.send(WaitCommand().serialize())
-            logging.info(f'Wait result: {await ws.recv()}')
+            print(f'Wait result: {await ws.recv()}')
 
 async def client_loop():
     while True:

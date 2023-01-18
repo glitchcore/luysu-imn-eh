@@ -50,8 +50,15 @@ class MotionController:
         self.device.command("M09")
         self.device.command("M05")
 
+    def check_status(self, status: str):
+        if status == "Alarm":
+            raise Device.DeviceNeedResetError("Alarm status")
+            
     def run(self, command: str):
-        return self.device.command(command)
+        ret = self.device.command(command)
+        status, _ = self.device.get_status()
+        self.check_status(status)
+        return ret
 
     def wait_run(self, command, timeout=None):
         d = self.device
@@ -61,8 +68,9 @@ class MotionController:
             status, mpos = d.get_status()
             logging.debug("status: %s", status)
             logging.debug("X: %s Y: %s", mpos[0], mpos[1])
-            if status == "Alarm":
-                raise Device.DeviceNeedResetError("Alarm status")
+
+            self.check_status(status)
+
             if timeout and (time.time() - start_time) > timeout:
                 raise Device.DeviceMalfunction("Timeout")
             if status != "Run":

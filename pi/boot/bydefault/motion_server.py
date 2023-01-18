@@ -69,6 +69,17 @@ async def motion_controller_loop(controller: AsyncMotionController, commands: as
         except Device.DeviceMalfunction as e:
             logging.info(f"Device malfunction: {e}. Back to home")
             await controller.reset_retract()
+        except Exception as e:
+            logging.error(f'Unexpected error: {e}')
+            raise
+        finally:
+            try:
+                # hack avoid the server haniging after encountering the exception
+                # because the queue wait is uncancellable
+                for _ in range(100):
+                    results.put_nowait((seq, StatusResponse('fatal error')))
+            except:
+                pass
 
 CONNECTION_SEQ = 0
 DEVICE_LOCK = asyncio.Lock()
@@ -115,8 +126,7 @@ async def server_loop(commands: asyncio.Queue, results: asyncio.Queue, ws):
                         break
 
     except Exception as ex:
-        logging.info(f'Client session error: {ex}')
-        raise      
+        logging.info(f'Client session error: {ex}')  
 
 async def main():
     d = Device("/dev/serial/by-id/usb-1a86_USB2.0-Ser_-if00-port0", 115200)
@@ -132,6 +142,6 @@ async def main():
     mc_loop = motion_controller_loop(controller, commands, results)
 
     async with websockets.serve(lambda ws: server_loop(commands, results, ws), 'localhost', MOTION_SERVER_PORT):
-        await mc_loop
+        await mc_loop    
 
 asyncio.run(main())
