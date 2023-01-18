@@ -64,7 +64,7 @@ async def console_input_loop(mpos: Tuple[float, float], ws: websockets.client.We
             ARROW_STEP = 20
             logging.info(f"step: {ARROW_STEP}")
         elif esc == ord('q'):
-            quit()
+            break
 
         elif esc == ord('w'):
             await ws.send(WaitCommand().serialize())
