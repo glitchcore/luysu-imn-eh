@@ -44,19 +44,28 @@ async def console_input_loop(mpos: Tuple[float, float], ws: websockets.client.We
                 mpos = (mpos[0] + move[0], mpos[1] + move[1])
                 await ws.send(MoveCommand(mpos[0], mpos[1]).serialize())
                 logging.debug(f'Response from server: {await ws.recv()}')
-        elif esc == 32:
-            points.append(mpos)
-        elif esc == 13:
-            with open(f"{prefix}-{N}.dat", "w") as f:
-                for point in points:
-                    f.write(f"{point[0]},{point[1]}\n")
-            N += 1
-            points.clear()
-        elif esc == ord('p'):
-            prefix = await loop.in_executor(None, input, "Please input the prefix of the file name: ")
-            N = 0
+
+        elif esc == ord('1'):
+            ARROW_STEP = 0.1
+            logging.info(f"step: {ARROW_STEP}")
+        elif esc == ord('2'):
+            ARROW_STEP = 0.5
+            logging.info(f"step: {ARROW_STEP}")
+        elif esc == ord('3'):
+            ARROW_STEP = 1
+            logging.info(f"step: {ARROW_STEP}")
+        elif esc == ord('4'):
+            ARROW_STEP = 5
+            logging.info(f"step: {ARROW_STEP}")
+        elif esc == ord('5'):
+            ARROW_STEP = 10
+            logging.info(f"step: {ARROW_STEP}")
+        elif esc == ord('6'):
+            ARROW_STEP = 20
+            logging.info(f"step: {ARROW_STEP}")
         elif esc == ord('q'):
             quit()
+
         elif esc == ord('w'):
             await ws.send(WaitCommand().serialize())
             print(f'Wait result: {await ws.recv()}')
