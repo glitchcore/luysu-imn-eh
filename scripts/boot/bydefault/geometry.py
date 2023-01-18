@@ -67,7 +67,7 @@ class TraingleKinematic:
         mach_pos = cart2mach(self._pos, self.calib)
         grbl_pos = mach2grbl(mach_pos, self.calib)
 
-        return (grbl_pos[0] - self.grbl_home[0], grbl_pos[1] - self.grbl_home[1])
+        return (grbl_pos[0] + self.grbl_home[0], grbl_pos[1] + self.grbl_home[1])
 
     def get_move_normalized(self, pos):
         return self.get_move(denormalize_coordinates(pos, self.transform))
