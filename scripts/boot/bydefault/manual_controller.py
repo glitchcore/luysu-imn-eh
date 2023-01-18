@@ -44,7 +44,15 @@ async def console_input_loop(mpos: Tuple[float, float], ws: websockets.client.We
                 mpos = (mpos[0] + move[0], mpos[1] + move[1])
                 await ws.send(MoveCommand(mpos[0], mpos[1]).serialize())
                 logging.debug(f'Response from server: {await ws.recv()}')
-
+        elif esc == ord('h'):
+            await ws.send(HomeCommand().serialize())
+            response = await ws.recv()
+            logging.debug(f'Response from server: {response}')
+        elif esc == ord('z'):
+            mpos = (125.22000000000014, 422.432)
+            logging.info(f'Move to zero: {mpos}')
+            await ws.send(MoveCommand(mpos[0], mpos[1]).serialize())
+            logging.debug(f'Response from server: {await ws.recv()}')
         elif esc == ord('1'):
             ARROW_STEP = 0.1
             logging.info(f"step: {ARROW_STEP}")
