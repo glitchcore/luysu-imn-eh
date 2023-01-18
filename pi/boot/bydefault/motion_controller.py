@@ -147,7 +147,7 @@ class MotionController:
     def move(self, x = None, y = None, speed = None):
         logging.debug(f"home: {self.home}")
 
-        self.wait_run(self.make_move_command(x,y, speed))
+        return self.wait_run(self.make_move_command(x,y, speed))
 
     def move_async(self, x = None, y = None, speed = None):
         return self.run(self.make_move_command(x, y, speed))

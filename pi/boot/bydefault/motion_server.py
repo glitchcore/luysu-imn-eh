@@ -42,7 +42,7 @@ async def motion_controller_loop(controller: AsyncMotionController, commands: as
             except Device.DeviceNeedResetError:
                 await controller.reset_retract()
 
-            #await controller.homing()
+            await controller.homing()
 
             if seq is not None:
                 x,y = await controller.pos()
@@ -66,12 +66,13 @@ async def motion_controller_loop(controller: AsyncMotionController, commands: as
                     logging.info(f'Unexpected command: {cmd}')
                     await results.put((seq, StatusResponse('error')))
         
-        except Device.DeviceMalfunction as e:
+        except (Device.DeviceMalfunction, Device.DeviceNeedResetError, Device.TimeoutError) as e:
             logging.info(f"Device malfunction: {e}. Back to home")
             await controller.reset_retract()
         except Exception as e:
-            logging.error(f'Unexpected error: {e}')
-            raise
+            logging.error(f'Unexpected error: {e}. Back to home')
+            await controller.reset_retract()
+            
         finally:
             try:
                 # hack avoid the server haniging after encountering the exception
