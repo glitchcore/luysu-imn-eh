@@ -11,7 +11,7 @@ class MotionControllerParameters:
         self.draw_speed = 300
 
 class MotionController:
-    def __init__(self, device, param = MotionControllerParameters()):
+    def __init__(self, device: Device, param = MotionControllerParameters()):
         self.device = device
         self.param = param
         self.home = [0, 0]
@@ -21,6 +21,7 @@ class MotionController:
 
         d.reset()
         d.command("$21=0")
+        d.command("$10=2")
 
         status, mpos = d.get_status()
 
@@ -53,16 +54,26 @@ class MotionController:
     def check_status(self, status: str):
         if status == "Alarm":
             raise Device.DeviceNeedResetError("Alarm status")
-            
+    
+    def wait_buffer_capacity(self):
+        d = self.device
+        while d.buffer_capacity < 2:
+            status, _ = d.get_status()
+            if status != "Run":
+                break
+
     def run(self, command: str):
-        ret = self.device.command(command)
-        status, _ = self.device.get_status()
+        d = self.device
+        self.wait_buffer_capacity()
+        ret = d.command(command)
+        status, _ = d.get_status()
         self.check_status(status)
         return ret
 
     def wait_run(self, command, timeout=None):
         d = self.device
         start_time = time.time()
+        self.wait_buffer_capacity()
         d.command(command)
         while True:
             status, mpos = d.get_status()

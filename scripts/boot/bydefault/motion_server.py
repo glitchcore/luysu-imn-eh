@@ -46,7 +46,6 @@ async def motion_controller_loop(controller: AsyncMotionController, commands: as
             except Device.DeviceNeedResetError:
                 await controller.reset_retract()
 
-            await controller.run("$10=2")
             await controller.homing()
 
             if seq is not None:
