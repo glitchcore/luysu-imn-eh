@@ -52,31 +52,32 @@ def mach2grbl(mach, calib):
     )
 
 class TraingleKinematic:
-    def __init__(self, controller, calib, reference_points):
-        self.controller = controller
+    def __init__(self, grbl_home, calib, reference_points):
         self.calib = calib
-        self.pos = (0, 0)
+
+        self.grbl_home = grbl_home
+        self.home = mach2cart((self.calib["init_a"], self.calib["init_b"]), self.calib)
+        self._pos = self.home
 
         self.transform = get_transformation_matrix_dlt(normalized_rect, reference_points)
 
-        self.update_from_controller()
-
-
-    def reset_home(self):
-        self.pos = [0, 0]
-        self.controller.reset_home()
-
-    def move(self, pos):
+    def get_move(self, pos):
         self.pos = pos
-        mach_pos = cart2mach(pos, self.calib)
+
+        mach_pos = cart2mach(self._pos, self.calib)
         grbl_pos = mach2grbl(mach_pos, self.calib)
-        self.controller.move(grbl_pos)
 
-    def move_normalized(self, pos):
-        self.move(denormalize_coordinates(pos, self.transform))
+        return (grbl_pos[0] - self.grbl_home[0], grbl_pos[1] - self.grbl_home[1])
 
-    def update_from_controller(self):
-        self.pos = mach2cart(self.controller.pos, self.calib)
+    def get_move_normalized(self, pos):
+        return self.get_move(denormalize_coordinates(pos, self.transform))
+
+    @property
+    def pos(self):
+        return (self._pos[0] - self.home[0], self._pos[1] - self.home[1])
+    @pos.setter
+    def pos(self, value):
+        self._pos = (self.home[0] + value[0], self.home[1] + value[1])
 
 if __name__ == "__main__":
     normalize_test()
