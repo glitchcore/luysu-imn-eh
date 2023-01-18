@@ -1,160 +1,153 @@
+import asyncio
+import websockets
 import logging
-import serial
-import time
-import termios
-import tty
-from getch import getch
 
+from protocol import *
+from motion_controller import MotionController
 from device import Device
-from motion_controller import MotionControllerParameters, MotionController
 
-from calib_gallery import CALIB
-from geometry import TriangleKinematic
+logging.basicConfig(level=logging.DEBUG)
 
-logging.basicConfig(level=logging.INFO)
+async def post(*args):
+    return await asyncio.get_event_loop().run_in_executor(None, *args)
 
-'''
-def arrow_move(controller):
-    ARROW_STEP = 0.5
+class AsyncMotionController:
+    def __init__(self, controller: MotionController):
+        self.controller = controller
 
-    prefix = input("Please input the prefix of the file name: ")
-    N = 0
-    points = []
+    async def reset_retract(self):
+        return await post(MotionController.reset_retract, self.controller) 
 
-    while True:
-        esc = ord(getch())
-        if esc == 27:
-            if ord(getch()) == 91:
-                key = ord(getch())
-                move = [0, 0]
+    async def homing(self):
+        return await post(MotionController.homing, self.controller)
 
-                if key == 65:  # Up arrow key
-                    move[0] += ARROW_STEP
-                    move[1] += ARROW_STEP
-                elif key == 66:  # Down arrow key
-                    move[0] -= ARROW_STEP
-                    move[1] -= ARROW_STEP
-                elif key == 67:  # Right arrow key
-                    move[0] -= ARROW_STEP
-                    move[1] += ARROW_STEP
-                elif key == 68:  # Left arrow key
-                    move[0] += ARROW_STEP
-                    move[1] -= ARROW_STEP
+    async def move(self, x: Optional[float], y: Optional[float], speed:Optional[float] = None):
+        return await post(MotionController.move, self.controller, x, y, speed)
 
-                controller.move(controller.pos[0] + move[0], controller.pos[1] + move[1])
-        elif esc == 32:
-            points.append(d.mpos)
-        elif esc == 13:
-            with open(f"{prefix}-{N}.dat", "w") as f:
-                for point in points:
-                    f.write(f"{point[0]},{point[1]}\n")
-            N += 1
-            points.clear()
-        elif esc == ord('p'):
-            prefix = input("Please input the prefix of the file name: ")
-            N = 0
-        elif esc == ord('q'):
-            break
-'''
-def arrow_move(controller):
-    ARROW_STEP = 0.2
+    async def move_async(self, x: Optional[float], y: Optional[float], speed: Optional[float] = None):
+        return await post(MotionController.move_async, self.controller, x, y, speed)
 
-    while True:
-        esc = ord(getch())
-        if esc == 27:
-            if ord(getch()) == 91:
-                key = ord(getch())
-                move = [0, 0]
+    async def wait_run(self, cmd: str):
+        return await post(MotionController.wait_run, self.controller, cmd)
 
-                if key == 65:  # Up arrow key
-                    move[0] -= ARROW_STEP
-                    move[1] -= ARROW_STEP
-                elif key == 66:  # Down arrow key
-                    move[0] += ARROW_STEP
-                    move[1] += ARROW_STEP
-                elif key == 67:  # Right arrow key
-                    move[0] += ARROW_STEP
-                    move[1] -= ARROW_STEP
-                elif key == 68:  # Left arrow key
-                    move[0] -= ARROW_STEP
-                    move[1] += ARROW_STEP
+    async def run(self, cmd: str):
+        return await post(MotionController.run, self.controller, cmd)
 
-                controller.move(controller.pos[0] + move[0], controller.pos[1] + move[1])
-                logging.info(f"pos: {controller.pos}")
 
-        elif esc == ord('1'):
-            ARROW_STEP = 0.1
-            logging.info(f"step: {ARROW_STEP}")
-        elif esc == ord('2'):
-            ARROW_STEP = 0.5
-            logging.info(f"step: {ARROW_STEP}")
-        elif esc == ord('3'):
-            ARROW_STEP = 1
-            logging.info(f"step: {ARROW_STEP}")
-        elif esc == ord('4'):
-            ARROW_STEP = 5
-            logging.info(f"step: {ARROW_STEP}")
-        elif esc == ord('5'):
-            ARROW_STEP = 10
-            logging.info(f"step: {ARROW_STEP}")
-        elif esc == ord('6'):
-            ARROW_STEP = 20
-            logging.info(f"step: {ARROW_STEP}")
+    async def pos(self):
+        return await post(lambda: self.controller.pos)
 
-        elif esc == ord('q'):
-            break
-
-def run_cycle(controller):
-    try:
-        controller.wait_run("")
-    except Device.DeviceNeedResetError:
-        controller.reset_retract()
-
-    '''while True:
-        controller.homing()
-        zero_position = (controller.home[0] + 105, controller.home[1] + 348)
-        controller.wait_run(f"G1F1000X{zero_position[0]}Y{zero_position[1]}")
-    '''
-
-    # controller.home_a() # home A
-    
-    controller.homing()
-    controller.move(84.5, 415.5, 1000)
-
-    print("set home position:")
-    arrow_move(controller)
-
-    triangle_controller = TriangleKinematic(controller, CALIB, CALIB["fragments"]["chr"])
-
-    triangle_controller.reset_home()
-
-    print("move, please:")
-    arrow_move(triangle_controller)
-
-    # arrow_move(controller)
-
-    # controller.home_b()
-
-    
-
-def main():
-    d = Device("/dev/serial/by-id/usb-1a86_USB2.0-Ser_-if00-port0", 115200)
-    d.reset()
-    logging.info("Device reset successfully")
-
-    controller = MotionController(d)
-
+async def motion_controller_loop(controller: AsyncMotionController, commands: asyncio.Queue, results: asyncio.Queue):
+    seq = None
     while True:
         try:
-            run_cycle(controller)
-        except Device.DeviceMalfunction as e:
+            try:
+                await controller.wait_run("")
+            except Device.DeviceNeedResetError:
+                await controller.reset_retract()
+
+            await controller.run("$10=2")
+            await controller.homing()
+
+            if seq is not None:
+                x,y = await controller.pos()
+                await results.put((seq, StatusResponse('ok', x, y)))
+                    
+                
+            while True:
+                nseq, cmd = await commands.get()
+                seq = nseq
+
+                if isinstance(cmd, MoveCommand):
+                    status = await controller.move_async(cmd.x, cmd.y)
+                    await results.put((seq, StatusResponse(status)))
+                elif isinstance(cmd, WaitCommand):
+                    x, y = await controller.wait_run("")
+                    await results.put((seq, StatusResponse('ok', x, y)))
+                elif isinstance(cmd, HomeCommand):
+                    await controller.homing()
+                    await results.put((seq, StatusResponse('ok')))
+                else:
+                    logging.info(f'Unexpected command: {cmd}')
+                    await results.put((seq, StatusResponse('error')))
+        
+        except (Device.DeviceMalfunction, Device.DeviceNeedResetError, Device.TimeoutError) as e:
             logging.info(f"Device malfunction: {e}. Back to home")
-            controller.reset_retract()
+            await controller.reset_retract()
+        except Exception as e:
+            logging.error(f'Unexpected error: {e}. Back to home')
+            await controller.reset_retract()
+            
+        finally:
+            try:
+                # hack avoid the server haniging after encountering the exception
+                # because the queue wait is uncancellable
+                for _ in range(100):
+                    results.put_nowait((seq, StatusResponse('fatal error')))
+            except:
+                pass
 
-if __name__ == "__main__":
-    main()
+CONNECTION_SEQ = 0
+DEVICE_LOCK = asyncio.Lock()
 
-# grbl.stream("$120=50.000")
-# grbl.stream("$121=50.000")
-# grbl.stream("$110=2000.000")
-# grbl.stream("$111=2000.000")
+async def server_loop(commands: asyncio.Queue, results: asyncio.Queue, ws):
+    global CONNECTION_SEQ
+    global DEVICE_LOCK
+
+    try:
+        if DEVICE_LOCK.locked():
+            raise RuntimeError('Parallel session detected')
+
+        async with DEVICE_LOCK:
+            CONNECTION_SEQ += 1
+            seq = CONNECTION_SEQ
+
+            async for msg in ws:
+                cmd_obj = json.loads(msg)
+                cmd_name = cmd_obj['cmd']
+
+                if cmd_name == 'move':
+                    x = None
+                    y = None
+
+                    if 'x' in cmd_obj:
+                        x = float(cmd_obj['x'])
+                    if 'y' in cmd_obj:
+                        y = float(cmd_obj['y'])
+                    
+                    await commands.put((seq, MoveCommand(x, y)))
+                elif cmd_name == 'wait':
+                    await commands.put((seq, WaitCommand()))
+                elif cmd_name == 'home':
+                    await commands.put((seq, HomeCommand()))
+                else:
+                    raise ValueError(f'Unexpected command: {cmd_obj}')
+
+                while True:
+                    nseq, result = await results.get()
+                    if nseq != seq:
+                        logging.info('Stale result status: {result} with seq {nseq}, current seq: {seq}; discarding')
+                    else:
+                        await ws.send(result.serialize())
+                        break
+
+    except Exception as ex:
+        logging.info(f'Client session error: {ex}')  
+
+async def main():
+    d = Device("/dev/serial/by-id/usb-1a86_USB2.0-Ser_-if00-port0", 115200)
+    await post(lambda: d.reset())
+    logging.info("Device reset successfully")
+
+    commands = asyncio.Queue(maxsize=30)
+    results = asyncio.Queue(maxsize=30)
+
+    sync_controller = MotionController(d)
+    controller = AsyncMotionController(sync_controller)
+
+    mc_loop = motion_controller_loop(controller, commands, results)
+
+    async with websockets.serve(lambda ws: server_loop(commands, results, ws), 'localhost', MOTION_SERVER_PORT):
+        await mc_loop    
+
+asyncio.run(main())
