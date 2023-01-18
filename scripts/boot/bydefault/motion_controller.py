@@ -50,6 +50,16 @@ class MotionController:
         self.device.command("M09")
         self.device.command("M05")
 
+    def check_status(self, status: str):
+        if status == "Alarm":
+            raise Device.DeviceNeedResetError("Alarm status")
+            
+    def run(self, command: str):
+        ret = self.device.command(command)
+        status, _ = self.device.get_status()
+        self.check_status(status)
+        return ret
+
     def wait_run(self, command, timeout=None):
         d = self.device
         start_time = time.time()
@@ -58,13 +68,14 @@ class MotionController:
             status, mpos = d.get_status()
             logging.debug("status: %s", status)
             logging.debug("X: %s Y: %s", mpos[0], mpos[1])
-            if status != "Run":
-                break
-            if status == "Alarm":
-                raise Device.DeviceNeedResetError("Alarm status")
+
+            self.check_status(status)
+
             if timeout and (time.time() - start_time) > timeout:
                 raise Device.DeviceMalfunction("Timeout")
-        logging.debug(f"pos: {self.pos}")
+            if status != "Run":
+                logging.debug(f"pos: {self.pos}")
+                return self.pos
 
     def homing_cycle(self, speed, target, update_home, timeout = None):
         d = self.device
@@ -120,9 +131,7 @@ class MotionController:
 
         logging.info(f"home: {self.home}")
     
-    def move(self, x = None, y = None, speed = None):
-        logging.debug(f"home: {self.home}")
-
+    def make_move_command(self, x = None,y = None, speed = None) -> str:
         if speed is None:
             speed = self.param.draw_speed
 
@@ -133,8 +142,15 @@ class MotionController:
             cmd += f"Y{self.home[1] + y}"
 
         logging.debug(f"cmd: {cmd}")
+        return cmd
 
-        self.wait_run(cmd)
+    def move(self, x = None, y = None, speed = None):
+        logging.debug(f"home: {self.home}")
+
+        return self.wait_run(self.make_move_command(x,y, speed))
+
+    def move_async(self, x = None, y = None, speed = None):
+        return self.run(self.make_move_command(x, y, speed))
 
     def reset_home(self, offset = (0, 0)):
         self.home = (self.device.mpos[0] + offset[0], self.device.mpos[1] + offset[1])
