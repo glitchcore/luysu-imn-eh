@@ -14,10 +14,6 @@ async def post(*args):
 class AsyncMotionController:
     def __init__(self, controller: MotionController):
         self.controller = controller
-        self.lock = asyncio.Lock()
-
-    async def try_lock(self):
-        return await asyncio.wait_for(self.lock.acquire(), 0.1)
 
     async def reset_retract(self):
         return await post(MotionController.reset_retract, self.controller) 
@@ -37,9 +33,8 @@ class AsyncMotionController:
     async def pos(self):
         return await post(lambda: self.controller.pos)
 
-async def motion_controller_loop(controller: AsyncMotionController, clients: asyncio.Queue):
-    client = None
-
+async def motion_controller_loop(controller: AsyncMotionController, commands: asyncio.Queue, results: asyncio.Queue):
+    seq = None
     while True:
         try:
             try:
@@ -47,58 +42,78 @@ async def motion_controller_loop(controller: AsyncMotionController, clients: asy
             except Device.DeviceNeedResetError:
                 await controller.reset_retract()
 
-            await controller.homing()
+            #await controller.homing()
 
+            if seq is not None:
+                x,y = await controller.pos()
+                await results.put((seq, StatusResponse('ok', x, y)))
+                    
+                
             while True:
-                try:
-                    if not client:
-                        client = await clients.get()
-                    x, y = await controller.pos()
-                    await client.send(StatusResponse('ok', x, y).serialize())
+                nseq, cmd = await commands.get()
+                seq = nseq
 
-                    async for msg in client:
-                        msg_obj: dict = json.loads(msg)
-                        cmd = msg_obj['cmd']
-
-                        if cmd == 'move':
-                            x = None
-                            y = None
-                            if 'x' in msg_obj:
-                                x = float(msg_obj['x'])
-
-                            if 'y' in msg_obj:
-                                y = float(msg_obj['y'])
-
-                            status = await controller.move_async(x, y)
-                            await client.send(StatusResponse(status).serialize())
-                        elif cmd == 'home':
-                            await controller.homing()
-                            x, y = await controller.pos()
-                            await client.send(StatusResponse('ok', x, y).serialize())
-                        elif cmd == 'wait':
-                            x, y = await controller.wait_run('')
-                            await client.send(StatusResponse('ok', x, y))
-                        else:
-                            raise ValueError(f'Unexpected request: {msg_obj}')
-
-                except Device.DeviceMalfunction:
-                    raise
-                except Device.DeviceNeedResetError:
-                    raise
-                except Device.TimeoutError:
-                    raise
-                except Exception as e:
-                    logging.info(f'Client error:{e}, aborting connection')
-                    client = None
-
+                if isinstance(cmd, MoveCommand):
+                    status = await controller.move_async(cmd.x, cmd.y)
+                    await results.put((seq, StatusResponse(status)))
+                elif isinstance(cmd, WaitCommand):
+                    x, y = await controller.wait_run("")
+                    await results.put((seq, StatusResponse('ok', x, y)))
+                elif isinstance(cmd, HomeCommand):
+                    await controller.homing()
+                    await results.put((seq, StatusResponse('ok')))
+                else:
+                    logging.info(f'Unexpected command: {cmd}')
+                    await results.put((seq, StatusResponse('error')))
+        
         except Device.DeviceMalfunction as e:
             logging.info(f"Device malfunction: {e}. Back to home")
             await controller.reset_retract()
 
-async def server_loop(queue: asyncio.Queue, ws):
+CONNECTION_SEQ = 0
+DEVICE_LOCK = asyncio.Lock()
+
+async def server_loop(commands: asyncio.Queue, results: asyncio.Queue, ws):
+    global CONNECTION_SEQ
+    global DEVICE_LOCK
+
     try:
-        queue.put_nowait(ws)
-        await asyncio.Future()
+        if DEVICE_LOCK.locked():
+            raise RuntimeError('Parallel session detected')
+
+        async with DEVICE_LOCK:
+            CONNECTION_SEQ += 1
+            seq = CONNECTION_SEQ
+
+            async for msg in ws:
+                cmd_obj = json.loads(msg)
+                cmd_name = cmd_obj['cmd']
+
+                if cmd_name == 'move':
+                    x = None
+                    y = None
+
+                    if 'x' in cmd_obj:
+                        x = float(cmd_obj['x'])
+                    if 'y' in cmd_obj:
+                        y = float(cmd_obj['y'])
+                    
+                    await commands.put((seq, MoveCommand(x, y)))
+                elif cmd_name == 'wait':
+                    await commands.put((seq, WaitCommand()))
+                elif cmd_name == 'home':
+                    await commands.put((seq, HomeCommand()))
+                else:
+                    raise ValueError(f'Unexpected command: {cmd_obj}')
+
+                while True:
+                    nseq, result = await results.get()
+                    if nseq != seq:
+                        logging.info('Stale result status: {result} with seq {nseq}, current seq: {seq}; discarding')
+                    else:
+                        await ws.send(result.serialize())
+                        break
+
     except Exception as ex:
         logging.info(f'Client session error: {ex}')
         raise      
@@ -108,13 +123,15 @@ async def main():
     await post(lambda: d.reset())
     logging.info("Device reset successfully")
 
-    clients = asyncio.Queue(maxsize = 1)
+    commands = asyncio.Queue(maxsize=30)
+    results = asyncio.Queue(maxsize=30)
+
     sync_controller = MotionController(d)
     controller = AsyncMotionController(sync_controller)
 
-    mc_loop = motion_controller_loop(controller, clients)
+    mc_loop = motion_controller_loop(controller, commands, results)
 
-    async with websockets.serve(lambda ws: server_loop(clients, ws), 'localhost', MOTION_SERVER_PORT):
+    async with websockets.serve(lambda ws: server_loop(commands, results, ws), 'localhost', MOTION_SERVER_PORT):
         await mc_loop
 
 asyncio.run(main())

@@ -57,6 +57,9 @@ async def console_input_loop(mpos: Tuple[float, float], ws: websockets.client.We
             N = 0
         elif esc == ord('q'):
             quit()
+        elif esc == ord('w'):
+            await ws.send(WaitCommand().serialize())
+            logging.info(f'Wait result: {await ws.recv()}')
 
 async def client_loop():
     while True:
@@ -64,14 +67,16 @@ async def client_loop():
             async with websockets.connect(f'ws://localhost:{MOTION_SERVER_PORT}') as ws:
                 logging.info(f'Connected to motion server at localhost:{MOTION_SERVER_PORT}')
 
+                await ws.send(WaitCommand().serialize())
                 pos_msg = json.loads(await ws.recv())
                 pos = (float(pos_msg['x']), float(pos_msg['y']))
 
                 logging.info(f'Starting position: {pos}')
 
                 await console_input_loop(pos, ws)
-                
+
         except Exception as ex:
-            logging.error(f'Error: {ex}, reconnecting...')    
+            logging.error(f'Error: {ex}, reconnecting...')
+            await asyncio.sleep(1)    
 
 asyncio.run(client_loop())
