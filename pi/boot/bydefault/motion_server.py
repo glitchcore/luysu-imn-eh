@@ -30,6 +30,10 @@ class AsyncMotionController:
     async def wait_run(self, cmd: str):
         return await post(MotionController.wait_run, self.controller, cmd)
 
+    async def run(self, cmd: str):
+        return await post(MotionController.run, self.controller, cmd)
+
+
     async def pos(self):
         return await post(lambda: self.controller.pos)
 
@@ -42,6 +46,7 @@ async def motion_controller_loop(controller: AsyncMotionController, commands: as
             except Device.DeviceNeedResetError:
                 await controller.reset_retract()
 
+            await controller.run("$10=2")
             await controller.homing()
 
             if seq is not None:
