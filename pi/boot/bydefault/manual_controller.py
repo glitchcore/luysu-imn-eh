@@ -43,6 +43,7 @@ async def console_input_loop(mpos: Tuple[float, float], ws: websockets.client.We
 
                 mpos = (mpos[0] + move[0], mpos[1] + move[1])
                 await ws.send(MoveCommand(mpos[0], mpos[1]).serialize())
+                logging.debug(f'Response from server: {await ws.recv()}')
         elif esc == 32:
             points.append(mpos)
         elif esc == 13:
@@ -52,7 +53,7 @@ async def console_input_loop(mpos: Tuple[float, float], ws: websockets.client.We
             N += 1
             points.clear()
         elif esc == ord('p'):
-            prefix = input("Please input the prefix of the file name: ")
+            prefix = await loop.in_executor(None, input, "Please input the prefix of the file name: ")
             N = 0
         elif esc == ord('q'):
             quit()
