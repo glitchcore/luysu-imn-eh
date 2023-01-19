@@ -1,18 +1,19 @@
-let isGrayscale = false;
-
 function change_color(event) {
-  if (event.code === "Space") {
-    var leds = document.getElementsByClassName("led");
-    for (var i = 0; i < leds.length; i++) {
-        leds[i].style.transition = "filter 0.5s ease-in-out";
-        if (!isGrayscale) {
+    console.log(event.code);
+    if (event.code === "Digit1") {
+        var leds = document.getElementsByClassName("led");
+        for (var i = 0; i < leds.length; i++) {
+            leds[i].style.transition = `filter ${2 + Math.random() * 10}s ease-in-out`;
             leds[i].style.filter = "grayscale(1) invert(0.7)";
-        } else {
+        }
+    }
+    if (event.code === "Digit2") {
+        var leds = document.getElementsByClassName("led");
+        for (var i = 0; i < leds.length; i++) {
+            leds[i].style.transition = `filter ${2 + Math.random() * 10}s ease-in-out`;
             leds[i].style.filter = "grayscale(0) invert(0.0)";
         }
     }
-    isGrayscale = !isGrayscale;
-  }
 }
 
 function on_load(){
