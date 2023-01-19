@@ -1,3 +1,20 @@
+let isGrayscale = false;
+
+function change_color(event) {
+  if (event.code === "Space") {
+    var leds = document.getElementsByClassName("led");
+    for (var i = 0; i < leds.length; i++) {
+        leds[i].style.transition = "filter 0.5s ease-in-out";
+        if (!isGrayscale) {
+            leds[i].style.filter = "grayscale(1) invert(0.7)";
+        } else {
+            leds[i].style.filter = "grayscale(0) invert(0.0)";
+        }
+    }
+    isGrayscale = !isGrayscale;
+  }
+}
+
 function on_load(){
     function getCookie(cname) {
         let name = cname + "=";
@@ -171,4 +188,5 @@ function on_load(){
         console.log("new url", newUrl);
     });
 
+    document.addEventListener("keydown", change_color);
 }
