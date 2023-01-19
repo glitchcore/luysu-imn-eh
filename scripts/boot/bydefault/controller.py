@@ -28,7 +28,8 @@ async def main_loop(mpos: Tuple[float, float], ws: websockets.client.WebSocketCl
         t = time()
         mpos = kinematic.get_move_normalized((nsin(t), nsin(t * 2)))
         await ws.send(MoveCommand(mpos[0], mpos[1]).serialize())
-        logging.debug(f'Response from server: {await ws.recv()}')
+        response = await ws.recv()
+        logging.debug(f'Response from server: {response}')
 
 async def client_loop():
     while True:
@@ -48,4 +49,5 @@ async def client_loop():
             logging.error(f'Error: {ex}, reconnecting...')
             await asyncio.sleep(1)    
 
-asyncio.run(client_loop())
+loop = asyncio.get_event_loop()
+loop.run_until_complete(client_loop())
