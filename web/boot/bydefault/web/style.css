@@ -15,3 +15,7 @@ html, body {
 .common img {
   z-index: -99;
 }
+
+.led {
+  filter: grayscale(1) invert(0.7);
+}
