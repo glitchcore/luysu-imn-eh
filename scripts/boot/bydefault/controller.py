@@ -18,15 +18,43 @@ logging.basicConfig(level=logging.INFO)
 def nsin(x):
     return sin(x) * 0.5 + 0.5
 
+from luysy_svg import get_files
+
+data = get_files()
+
+LED_TIME = 5 * 60
+EVN_TIME = 2 * 60
+
+fragments = {
+    "led": [],
+    "chr": [(0, 10), (430, -10), (420, -350), (0, -295)]
+}
+
 async def main_loop(mpos: Tuple[float, float], ws: websockets.client.WebSocketClientProtocol):
     loop = asyncio.get_event_loop()
 
-    normalized_rect = [(0, 10), (430, -10), (420, -350), (0, -295)]
-    kinematic = TraingleKinematic(CALIB, normalized_rect)
+    kinematic = TraingleKinematic(CALIB, fragments["chr"])
+
+    last_time = time()
+
+    phases_x = [0] * 5
+    freqs_x = [1, 2, 3, 4, 5]
+    phases_y = [0] * 5
+    freqs_y = [1, 2, 3, 4, 5]
 
     while True:
         t = time()
-        mpos = kinematic.get_move_normalized((nsin(t), nsin(t * 2)))
+
+        if t - last_time > LED_TIME:
+            logging.info(f'go to evn')
+
+        x = sum([nsin(f * t / 20 + p) for f, p in zip(freqs_x, phases_x)]) / len(phases_x)
+        y = sum([nsin(f * t / 20 + p) for f, p in zip(freqs_y, phases_y)])
+
+        phases_x = [a + (random.random() - 0.5) * 0.1 for a in phases_x]
+        phases_y = [a + (random.random() - 0.5) * 0.1 for a in phases_y]
+
+        mpos = kinematic.get_move_normalized((x, y))
         await ws.send(MoveCommand(mpos[0], mpos[1]).serialize())
         response = await ws.recv()
         logging.debug(f'Response from server: {response}')

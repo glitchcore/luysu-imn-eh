@@ -1,5 +1,4 @@
 function change_color(event) {
-    console.log(event.code);
     if (event.code === "Digit1") {
         var leds = document.getElementsByClassName("led");
         for (var i = 0; i < leds.length; i++) {
@@ -9,6 +8,20 @@ function change_color(event) {
     }
     if (event.code === "Digit2") {
         var leds = document.getElementsByClassName("led");
+        for (var i = 0; i < leds.length; i++) {
+            leds[i].style.transition = `filter ${2 + Math.random() * 10}s ease-in-out`;
+            leds[i].style.filter = "grayscale(0) invert(0.0)";
+        }
+    }
+    if (event.code === "Digit2") {
+        var leds = document.getElementsByClassName("evn");
+        for (var i = 0; i < leds.length; i++) {
+            leds[i].style.transition = `filter ${2 + Math.random() * 10}s ease-in-out`;
+            leds[i].style.filter = "grayscale(1) invert(0.7)";
+        }
+    }
+    if (event.code === "Digit1") {
+        var leds = document.getElementsByClassName("evn");
         for (var i = 0; i < leds.length; i++) {
             leds[i].style.transition = `filter ${2 + Math.random() * 10}s ease-in-out`;
             leds[i].style.filter = "grayscale(0) invert(0.0)";
