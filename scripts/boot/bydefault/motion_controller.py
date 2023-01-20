@@ -22,7 +22,7 @@ class MotionController:
 
         d.reset()
         d.command("$21=0")
-        d.command("$10=2")
+        # d.command("$10=2")
 
         status, mpos = d.get_status()
 
@@ -122,7 +122,7 @@ class MotionController:
             self.enable_both()
             self.wait_run(f"G1F1000Y{d.mpos[1] + self.param.y_init_retract}")
 
-        self.homing_cycle(50, target, update_home, timeout = 5)
+        self.homing_cycle(50, target, update_home, timeout = 10)
 
         if disable_y:
             logging.info("return y back")
@@ -141,13 +141,16 @@ class MotionController:
         except Device.DeviceNeedResetError:
             raise Device.DeviceMalfunction("Unhandled reset")
 
+        self.wait_run(f"G1F{self.param.draw_speed}")
+
         logging.info(f"home: {self.home}")
     
     def make_move_command(self, x = None,y = None, speed = None) -> str:
         if speed is None:
             speed = self.param.draw_speed
 
-        cmd = f"G1F{speed}"
+        # cmd = f"G1F{speed}"
+        cmd = ""
         if x is not None:
             cmd += f"X{self.home[0] + x}"
         if y is not None:
@@ -158,10 +161,12 @@ class MotionController:
 
     def move(self, x = None, y = None, speed = None):
         logging.debug(f"home: {self.home}")
+        logging.info(f"move to: {x} {y}")
 
         return self.wait_run(self.make_move_command(x,y, speed))
 
     def move_async(self, x = None, y = None, speed = None):
+        logging.info(f"move async to: {x} {y}")
         return self.run(self.make_move_command(x, y, speed))
 
     def reset_home(self, offset = (0, 0)):

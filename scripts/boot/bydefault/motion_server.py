@@ -6,7 +6,7 @@ from protocol import *
 from motion_controller import MotionController
 from device import Device
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 async def post(*args):
     return await asyncio.get_event_loop().run_in_executor(None, *args)
@@ -74,8 +74,8 @@ async def motion_controller_loop(controller: AsyncMotionController, commands: as
             logging.info(f"Device malfunction: {e}. Back to home")
             await controller.reset_retract()
         except Exception as e:
-            logging.error(f'Unexpected error: {e}. Back to home')
-            await controller.reset_retract()
+            logging.error(f'Unexpected error: {e}')
+            # await controller.reset_retract()
             
         finally:
             try:
@@ -146,7 +146,7 @@ async def main():
 
     mc_loop = motion_controller_loop(controller, commands, results)
 
-    async with websockets.serve(lambda ws: server_loop(commands, results, ws), 'localhost', MOTION_SERVER_PORT):
+    async with websockets.serve(lambda ws: server_loop(commands, results, ws), '0.0.0.0', MOTION_SERVER_PORT):
         await mc_loop    
 
 asyncio.run(main())

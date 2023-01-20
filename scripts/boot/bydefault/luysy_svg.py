@@ -38,7 +38,7 @@ def get_files():
         file_name = file.split("/")[-1]
         parts = file_name.split("-", 1)
         # print(parts)
-        data.append((parts[0], parse_svg(folder_path + '/' + file_name)))
+        data.append((parts[0], parse_svg(folder_path + '/' + file_name), file_name))
 
     return data
 
